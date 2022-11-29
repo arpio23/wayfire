@@ -45,5 +45,18 @@
 				<_long>Sets the triggering activator binding.</_long>
 			</entry>
 		</option>
+		<option name="release_bindings" type="dynamic-list" type-hint="dict">
+			<_short>Realease bindings</_short>
+			<_long>Sets the bindings which activate on release</_long>
+			<entry prefix="command_" type="string" name="command">
+				<_short>Command</_short>
+				<_long>Sets the command to execute.</_long>
+				<hint>file</hint>
+			</entry>
+			<entry prefix="release_binding_" type="activator" name="binding">
+				<_short>Binding</_short>
+				<_long>Sets the triggering activator binding.</_long>
+			</entry>
+		</option>
 	</plugin>
 </wayfire>
