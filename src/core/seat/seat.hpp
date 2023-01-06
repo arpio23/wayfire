@@ -85,7 +85,8 @@ class seat_t
     wf::wl_listener_wrapper request_start_drag, start_drag, end_drag,
         request_set_selection, request_set_primary_selection;
 
-    wf::signal_connection_t on_new_device, on_remove_device;
+    wf::signal::connection_t<wf::input_device_added_signal> on_new_device;
+    wf::signal::connection_t<wf::input_device_removed_signal> on_remove_device;
 
     /** A list of all keyboards in this seat */
     std::vector<std::unique_ptr<wf::keyboard_t>> keyboards;

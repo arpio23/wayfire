@@ -5,12 +5,7 @@
 wf::bindings_repository_t::bindings_repository_t()
 {
     priv = std::make_unique<impl>();
-    priv->on_config_reload.set_callback([=] (wf::signal_data_t*)
-    {
-        priv->recreate_hotspots();
-    });
-
-    wf::get_core().connect_signal("reload-config", &priv->on_config_reload);
+    wf::get_core().connect(&priv->on_config_reload);
 }
 
 template<class Option, class Callback>

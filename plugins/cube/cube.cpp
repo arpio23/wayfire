@@ -21,6 +21,7 @@
 #include "wayfire/region.hpp"
 #include "wayfire/scene-render.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-definitions.hpp"
 
 #define Z_OFFSET_NEAR 0.89567f
 #define Z_OFFSET_FAR  2.00000f
@@ -392,7 +393,7 @@ class wayfire_cube : public wf::per_output_plugin_instance_t, public wf::pointer
             return false;
         }
 
-        wf::get_core().connect_signal("pointer_motion", &on_motion_event);
+        wf::get_core().connect(&on_motion_event);
 
         render_node = std::make_shared<cube_render_node_t>(this);
         wf::scene::add_front(wf::get_core().scene(), render_node);
@@ -437,7 +438,7 @@ class wayfire_cube : public wf::per_output_plugin_instance_t, public wf::pointer
         input_grab->ungrab_input();
         output->deactivate_plugin(&grab_interface);
         wf::get_core().unhide_cursor();
-        wf::get_core().disconnect_signal(&on_motion_event);
+        on_motion_event.disconnect();
 
         /* Figure out how much we have rotated and switch workspace */
         int size = get_num_faces();
@@ -695,11 +696,9 @@ class wayfire_cube : public wf::per_output_plugin_instance_t, public wf::pointer
         }
     };
 
-    wf::signal_connection_t on_motion_event = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::input_event_signal<wlr_pointer_motion_event>> on_motion_event =
+        [=] (wf::input_event_signal<wlr_pointer_motion_event> *ev)
     {
-        auto ev = static_cast<
-            wf::input_event_signal<wlr_pointer_motion_event>*>(data);
-
         pointer_moved(ev->event);
 
         ev->event->delta_x    = 0;

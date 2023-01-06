@@ -27,7 +27,7 @@ class input_manager_t
     wf::wl_listener_wrapper input_device_created;
     wf::wl_idle_call idle_update_cursor;
 
-    wf::signal_connection_t config_updated;
+    wf::signal::connection_t<wf::reload_config_signal> config_updated;
     wf::signal::connection_t<output_added_signal> output_added;
 
   public:
@@ -67,14 +67,20 @@ class input_manager_t
  * Emit a signal for device events.
  */
 template<class EventType>
-wf::input_event_processing_mode_t emit_device_event_signal(
-    std::string event_name, EventType *event)
+wf::input_event_processing_mode_t emit_device_event_signal(EventType *event)
 {
     wf::input_event_signal<EventType> data;
     data.event = event;
-    wf::get_core().emit_signal(event_name, &data);
-
+    wf::get_core().emit(&data);
     return data.mode;
+}
+
+template<class EventType>
+void emit_device_post_event_signal(EventType *event)
+{
+    wf::post_input_event_signal<EventType> data;
+    data.event = event;
+    wf::get_core().emit(&data);
 }
 
 #endif /* end of include guard: INPUT_MANAGER_HPP */

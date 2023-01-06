@@ -76,9 +76,8 @@ wf::seat_t::seat_t()
     request_set_primary_selection.connect(
         &seat->events.request_set_primary_selection);
 
-    on_new_device.set_callback([&] (signal_data_t *data)
+    on_new_device = [&] (wf::input_device_added_signal *ev)
     {
-        auto ev = static_cast<input_device_signal*>(data);
         switch (ev->device->get_wlr_handle()->type)
         {
           case WLR_INPUT_DEVICE_KEYBOARD:
@@ -102,12 +101,11 @@ wf::seat_t::seat_t()
         }
 
         update_capabilities();
-    });
+    };
 
-    on_remove_device.set_callback([&] (signal_data_t *data)
+    on_remove_device = [&] (wf::input_device_removed_signal *ev)
     {
-        auto dev =
-            static_cast<input_device_signal*>(data)->device->get_wlr_handle();
+        auto dev = ev->device->get_wlr_handle();
         if (dev->type == WLR_INPUT_DEVICE_KEYBOARD)
         {
             bool current_kbd_destroyed = false;
@@ -134,9 +132,10 @@ wf::seat_t::seat_t()
         }
 
         update_capabilities();
-    });
-    wf::get_core().connect_signal("input-device-added", &on_new_device);
-    wf::get_core().connect_signal("input-device-removed", &on_remove_device);
+    };
+
+    wf::get_core().connect(&on_new_device);
+    wf::get_core().connect(&on_remove_device);
 }
 
 void wf::seat_t::update_capabilities()
@@ -255,7 +254,7 @@ void wf::seat_t::transfer_grab(wf::scene::node_ptr grab_node, bool retain_presse
 
     wf::keyboard_focus_changed_signal data;
     data.new_focus = grab_node;
-    wf::get_core().emit_signal("keyboard-focus-changed", &data);
+    wf::get_core().emit(&data);
 }
 
 void wf::seat_t::set_keyboard_focus(wf::scene::node_ptr new_focus)
@@ -280,7 +279,7 @@ void wf::seat_t::set_keyboard_focus(wf::scene::node_ptr new_focus)
 
     wf::keyboard_focus_changed_signal data;
     data.new_focus = new_focus;
-    wf::get_core().emit_signal("keyboard-focus-changed", &data);
+    wf::get_core().emit(&data);
 }
 
 namespace wf

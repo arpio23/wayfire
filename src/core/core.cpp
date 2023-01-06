@@ -313,7 +313,8 @@ void wf::compositor_core_impl_t::init()
 
 void wf::compositor_core_impl_t::post_init()
 {
-    this->emit_signal("_backend_started", nullptr);
+    core_backend_started_signal backend_started_ev;
+    this->emit(&backend_started_ev);
     this->state = compositor_state_t::RUNNING;
     plugin_mgr  = std::make_unique<wf::plugin_manager_t>();
 
@@ -330,13 +331,15 @@ void wf::compositor_core_impl_t::post_init()
     // Start processing cursor events
     seat->cursor->setup_listeners();
 
-    this->emit_signal("startup-finished", nullptr);
+    core_startup_finished_signal startup_ev;
+    this->emit(&startup_ev);
 }
 
 void wf::compositor_core_impl_t::shutdown()
 {
     this->state = compositor_state_t::SHUTDOWN;
-    wf::get_core().emit_signal("shutdown", nullptr);
+    core_shutdown_signal ev;
+    this->emit(&ev);
     wl_display_terminate(wf::get_core().display);
 }
 

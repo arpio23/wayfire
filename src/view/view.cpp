@@ -205,6 +205,7 @@ void wf::view_interface_t::set_output(wf::output_t *new_output)
     }
 
     view_set_output_signal data;
+    data.view   = self();
     data.output = get_output();
 
     this->priv->output = new_output;
@@ -215,7 +216,8 @@ void wf::view_interface_t::set_output(wf::output_t *new_output)
         get_output()->emit_signal("view-attached", &data);
     }
 
-    emit_signal("set-output", &data);
+    this->emit(&data);
+    wf::get_core().emit(&data);
 
     for (auto& view : this->children)
     {

@@ -150,7 +150,7 @@ class scale_title_filter : public wf::per_output_plugin_instance_t
         {
             if (!scale_running)
             {
-                wf::get_core().connect_signal("keyboard_key", &scale_key);
+                wf::get_core().connect(&scale_key);
                 scale_running = true;
                 update_overlay();
             }
@@ -197,17 +197,16 @@ class scale_title_filter : public wf::per_output_plugin_instance_t
         }
     }
 
-    wf::signal_connection_t scale_key = [this] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::input_event_signal<wlr_keyboard_key_event>> scale_key =
+        [this] (wf::input_event_signal<wlr_keyboard_key_event> *ev)
     {
-        auto k =
-            static_cast<wf::input_event_signal<wlr_keyboard_key_event>*>(data);
-        if (k->event->state == WL_KEYBOARD_KEY_STATE_RELEASED)
+        if (ev->event->state == WL_KEYBOARD_KEY_STATE_RELEASED)
         {
-            keys.erase(k->event->keycode);
+            keys.erase(ev->event->keycode);
             return;
         }
 
-        if ((k->event->keycode == KEY_ESC) || (k->event->keycode == KEY_ENTER))
+        if ((ev->event->keycode == KEY_ESC) || (ev->event->keycode == KEY_ENTER))
         {
             return;
         }
@@ -217,10 +216,8 @@ class scale_title_filter : public wf::per_output_plugin_instance_t
             return;
         }
 
-        keys[k->event->keycode] =
-            std::make_unique<wf::key_repeat_t>(k->event->keycode,
-                handle_key_repeat);
-        handle_key_repeat(k->event->keycode);
+        keys[ev->event->keycode] = std::make_unique<wf::key_repeat_t>(ev->event->keycode, handle_key_repeat);
+        handle_key_repeat(ev->event->keycode);
     };
 
 
@@ -231,7 +228,7 @@ class scale_title_filter : public wf::per_output_plugin_instance_t
 
     void do_end_scale()
     {
-        wf::get_core().disconnect_signal(&scale_key);
+        scale_key.disconnect();
         keys.clear();
         clear_overlay();
         scale_running = false;

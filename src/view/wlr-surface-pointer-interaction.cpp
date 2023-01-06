@@ -7,6 +7,7 @@
 #include "view/surface-impl.hpp"
 #include "wayfire/core.hpp"
 #include "wayfire/scene-input.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include "wayfire/signal-provider.hpp"
 #include "wayfire/util.hpp"
 #include "wlr-surface-node.hpp"
@@ -80,10 +81,9 @@ class wlr_surface_pointer_interaction_t final : public wf::pointer_interaction_t
 
     // A handler for pointer motion events before they are passed to the scenegraph.
     // Necessary for the implementation of pointer-constraints and relative-pointer.
-    wf::signal_connection_t on_pointer_motion = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::input_event_signal<wlr_pointer_motion_event>> on_pointer_motion =
+        [=] (wf::input_event_signal<wlr_pointer_motion_event> *evv)
     {
-        auto evv = static_cast<
-            wf::input_event_signal<wlr_pointer_motion_event>*>(data);
         auto ev    = evv->event;
         auto& seat = wf::get_core_impl().seat;
 
@@ -200,7 +200,7 @@ class wlr_surface_pointer_interaction_t final : public wf::pointer_interaction_t
 
         _check_activate_constraint();
         wf::xwayland_bring_to_front(surface);
-        wf::get_core().connect_signal("pointer_motion", &on_pointer_motion);
+        wf::get_core().connect(&on_pointer_motion);
     }
 
     void handle_pointer_motion(wf::pointf_t local, uint32_t time_ms) final

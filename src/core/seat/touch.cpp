@@ -25,34 +25,32 @@ wf::touch_interface_t::touch_interface_t(wlr_cursor *cursor, wlr_seat *seat,
     on_down.set_callback([=] (void *data)
     {
         auto ev   = static_cast<wlr_touch_down_event*>(data);
-        auto mode = emit_device_event_signal("touch_down", ev);
+        auto mode = emit_device_event_signal(ev);
 
         double lx, ly;
-        wlr_cursor_absolute_to_layout_coords(cursor, &ev->touch->base,
-            ev->x, ev->y, &lx, &ly);
+        wlr_cursor_absolute_to_layout_coords(cursor, &ev->touch->base, ev->x, ev->y, &lx, &ly);
 
         wf::pointf_t point;
         wf::get_core().output_layout->get_output_coords_at({lx, ly}, point);
         handle_touch_down(ev->touch_id, ev->time_msec, point, mode);
-        wlr_idle_notify_activity(wf::get_core().protocols.idle,
-            wf::get_core().get_current_seat());
-        emit_device_event_signal("touch_down_post", ev);
+        wlr_idle_notify_activity(wf::get_core().protocols.idle, wf::get_core().get_current_seat());
+        emit_device_post_event_signal(ev);
     });
 
     on_up.set_callback([=] (void *data)
     {
         auto ev   = static_cast<wlr_touch_up_event*>(data);
-        auto mode = emit_device_event_signal("touch_up", ev);
+        auto mode = emit_device_event_signal(ev);
         handle_touch_up(ev->touch_id, ev->time_msec, mode);
         wlr_idle_notify_activity(wf::get_core().protocols.idle,
             wf::get_core().get_current_seat());
-        emit_device_event_signal("touch_up_post", ev);
+        emit_device_post_event_signal(ev);
     });
 
     on_motion.set_callback([=] (void *data)
     {
         auto ev   = static_cast<wlr_touch_motion_event*>(data);
-        auto mode = emit_device_event_signal("touch_motion", ev);
+        auto mode = emit_device_event_signal(ev);
 
         double lx, ly;
         wlr_cursor_absolute_to_layout_coords(
@@ -62,9 +60,8 @@ wf::touch_interface_t::touch_interface_t(wlr_cursor *cursor, wlr_seat *seat,
         wf::pointf_t point;
         wf::get_core().output_layout->get_output_coords_at({lx, ly}, point);
         handle_touch_motion(ev->touch_id, ev->time_msec, point, true, mode);
-        wlr_idle_notify_activity(wf::get_core().protocols.idle,
-            wf::get_core().get_current_seat());
-        emit_device_event_signal("touch_motion_post", ev);
+        wlr_idle_notify_activity(wf::get_core().protocols.idle, wf::get_core().get_current_seat());
+        emit_device_post_event_signal(ev);
     });
 
     on_cancel.set_callback([=] (void *data)

@@ -375,7 +375,9 @@ scale_show_title_t::scale_show_title_t() :
     {
         show_view_title_overlay = title_overlay_t::NEVER;
         last_title_overlay = nullptr;
-        mouse_update.disconnect();
+
+        post_absolute_motion.disconnect();
+        post_motion.disconnect();
     }
 },
 
@@ -434,7 +436,13 @@ rem_title_overlay{[] (wf::signal_data_t *data)
     }
 },
 
-mouse_update{[this] (auto)
+post_motion{[=] (auto)
+    {
+        update_title_overlay_mouse();
+    }
+},
+
+post_absolute_motion{[=] (auto)
     {
         update_title_overlay_mouse();
     }
@@ -453,7 +461,8 @@ void scale_show_title_t::init(wf::output_t *output)
 
 void scale_show_title_t::fini()
 {
-    mouse_update.disconnect();
+    post_motion.disconnect();
+    post_absolute_motion.disconnect();
 }
 
 void scale_show_title_t::update_title_overlay_opt()
@@ -473,9 +482,11 @@ void scale_show_title_t::update_title_overlay_opt()
     if (show_view_title_overlay == title_overlay_t::MOUSE)
     {
         update_title_overlay_mouse();
-        mouse_update.disconnect();
-        wf::get_core().connect_signal("pointer_motion_absolute_post", &mouse_update);
-        wf::get_core().connect_signal("pointer_motion_post", &mouse_update);
+
+        post_absolute_motion.disconnect();
+        post_motion.disconnect();
+        wf::get_core().connect(&post_absolute_motion);
+        wf::get_core().connect(&post_motion);
     }
 }
 

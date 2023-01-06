@@ -21,10 +21,9 @@ class input_method_relay
     text_input *find_focused_text_input();
     void set_focus(wlr_surface*);
 
-    wf::signal_connection_t keyboard_focus_changed =
-        [this] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::keyboard_focus_changed_signal> keyboard_focus_changed =
+        [=] (wf::keyboard_focus_changed_signal *ev)
     {
-        auto ev = static_cast<wf::keyboard_focus_changed_signal*>(data);
         if (auto vnode = dynamic_cast<wf::scene::view_node_t*>(ev->new_focus.get()))
         {
             set_focus(vnode->get_view()->get_wlr_surface());

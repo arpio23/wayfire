@@ -79,11 +79,8 @@ void wayfire_focus::init()
     });
     output->connect_signal("wm-focus-request", &on_wm_focus_request);
 
-    on_button.set_callback([=] (wf::signal_data_t *data)
+    on_pointer_button = [=] (wf::input_event_signal<wlr_pointer_button_event> *ev)
     {
-        auto ev = static_cast<
-            wf::input_event_signal<wlr_pointer_button_event>*>(data);
-
         if (ev->event->state != WLR_BUTTON_PRESSED)
         {
             return;
@@ -103,8 +100,8 @@ void wayfire_focus::init()
         bool pass_through = (pass_btns || !changed_focus);
         ev->mode = pass_through ? wf::input_event_processing_mode_t::FULL :
             wf::input_event_processing_mode_t::NO_CLIENT;
-    });
-    wf::get_core().connect_signal("pointer_button", &on_button);
+    };
+    wf::get_core().connect(&on_pointer_button);
 
     // build touch gesture
     auto on_tap = std::make_unique<wf::touch::touch_action_t>(1, true);
@@ -145,6 +142,5 @@ bool wayfire_focus::check_focus_surface(wayfire_view view)
 
 void wayfire_focus::fini()
 {
-    output->rem_binding(&on_button);
     wf::get_core().rem_touch_gesture(tap_gesture);
 }

@@ -900,8 +900,13 @@ class output_layout_t::impl
      * virtual output with the noop backend. */
     std::unique_ptr<output_layout_output_t> noop_output;
 
-    signal_connection_t on_config_reload;
-    signal_connection_t on_backend_started = [=] (wf::signal_data_t*)
+    wf::signal::connection_t<wf::reload_config_signal> on_config_reload = [=] (wf::reload_config_signal *ev)
+    {
+        reconfigure_from_config();
+    };
+
+    wf::signal::connection_t<core_backend_started_signal> on_backend_started =
+        [=] (core_backend_started_signal *ev)
     {
         // We need to ensure that at any given time we have at least one
         // output while core is running.
@@ -942,14 +947,12 @@ class output_layout_t::impl
         on_backend_destroy.connect(&wf::get_core().renderer->events.destroy);
 
         output_layout = wlr_output_layout_create();
-
-        on_config_reload.set_callback([=] (void*) { reconfigure_from_config(); });
-        get_core().connect_signal("reload-config", &on_config_reload);
+        get_core().connect(&on_config_reload);
 
         noop_backend = wlr_headless_backend_create(get_core().display);
         wlr_backend_start(noop_backend);
 
-        get_core().connect_signal("_backend_started", &on_backend_started);
+        get_core().connect(&on_backend_started);
 
         output_manager = wlr_output_manager_v1_create(get_core().display);
         on_output_manager_test.set_callback([=] (void *data)

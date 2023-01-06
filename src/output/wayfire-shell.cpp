@@ -30,7 +30,8 @@ class wfs_hotspot
     uint32_t timeout_ms;
     wl_resource *hotspot_resource;
 
-    wf::signal_connection_t on_motion_event = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_tablet_tool_axis_event>> on_tablet_axis =
+        [=] (wf::post_input_event_signal<wlr_tablet_tool_axis_event> *ev)
     {
         idle_check_input.run_once([=] ()
         {
@@ -40,7 +41,18 @@ class wfs_hotspot
         });
     };
 
-    wf::signal_connection_t on_touch_motion_event = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_pointer_motion_event>> on_motion_event =
+        [=] (auto)
+    {
+        idle_check_input.run_once([=] ()
+        {
+            auto gcf = wf::get_core().get_cursor_position();
+            wf::point_t gc{(int)gcf.x, (int)gcf.y};
+            process_input_motion(gc);
+        });
+    };
+
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_touch_motion_event>> on_touch_motion = [=] (auto)
     {
         idle_check_input.run_once([=] ()
         {
@@ -144,9 +156,9 @@ class wfs_hotspot
             }
         });
 
-        wf::get_core().connect_signal("pointer_motion", &on_motion_event);
-        wf::get_core().connect_signal("tablet_axis", &on_motion_event);
-        wf::get_core().connect_signal("touch_motion", &on_touch_motion_event);
+        wf::get_core().connect(&on_motion_event);
+        wf::get_core().connect(&on_touch_motion);
+        wf::get_core().connect(&on_tablet_axis);
         wf::get_core().output_layout->connect(&on_output_removed);
     }
 
