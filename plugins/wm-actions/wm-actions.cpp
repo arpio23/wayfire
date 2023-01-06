@@ -5,6 +5,8 @@
 #include <wayfire/util/log.hpp>
 #include "wayfire/scene-operations.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-definitions.hpp"
+#include "wayfire/signal-provider.hpp"
 #include "wm-actions-signals.hpp"
 
 class wayfire_wm_actions_t : public wf::per_output_plugin_instance_t
@@ -154,19 +156,28 @@ class wayfire_wm_actions_t : public wf::per_output_plugin_instance_t
         }
     };
 
-    /**
-     * Disables show desktop if the workspace is changed or any view is attached,
-     * mapped or unminimized.
-     */
-    wf::signal_connection_t view_attached = [this] (wf::signal_data_t *data)
+    void check_disable_showdesktop(wayfire_view view)
     {
-        auto view = get_signaled_view(data);
         if ((view->role != wf::VIEW_ROLE_TOPLEVEL) || !view->is_mapped())
         {
             return;
         }
 
         disable_showdesktop();
+    }
+
+    /**
+     * Disables show desktop if the workspace is changed or any view is attached,
+     * mapped or unminimized.
+     */
+    wf::signal_connection_t view_attached = [this] (wf::signal_data_t *data)
+    {
+        check_disable_showdesktop(get_signaled_view(data));
+    };
+
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
+    {
+        check_disable_showdesktop(ev->view);
     };
 
     wf::signal_connection_t workspace_changed = [this] (wf::signal_data_t *data)
@@ -269,9 +280,9 @@ class wayfire_wm_actions_t : public wf::per_output_plugin_instance_t
             }
 
             output->connect_signal("view-layer-attached", &view_attached);
-            output->connect_signal("view-mapped", &view_attached);
             output->connect_signal("workspace-changed", &workspace_changed);
             output->connect_signal("view-minimized", &view_minimized);
+            output->connect(&on_view_mapped);
             return true;
         }
 

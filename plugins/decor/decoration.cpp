@@ -7,10 +7,17 @@
 
 #include "deco-subsurface.hpp"
 #include "wayfire/plugin.hpp"
+#include "wayfire/signal-provider.hpp"
 
 class wayfire_decoration : public wf::plugin_interface_t, private wf::per_output_tracker_mixin_t<>
 {
     wf::view_matcher_t ignore_views{"decoration/ignore_views"};
+
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
+    {
+        update_view_decoration(ev->view);
+    };
+
     wf::signal_connection_t view_updated = [=] (wf::signal_data_t *data)
     {
         update_view_decoration(get_signaled_view(data));
@@ -37,7 +44,7 @@ class wayfire_decoration : public wf::plugin_interface_t, private wf::per_output
 
     void handle_new_output(wf::output_t *output) override
     {
-        output->connect_signal("view-mapped", &view_updated);
+        output->connect(&on_view_mapped);
         output->connect_signal("view-decoration-state-updated", &view_updated);
         for (auto& view : output->workspace->get_views_in_layer(wf::ALL_LAYERS))
         {

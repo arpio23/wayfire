@@ -337,8 +337,10 @@ void wf::emit_view_map_signal(wayfire_view view, bool has_position)
     wf::view_mapped_signal data;
     data.view = view;
     data.is_positioned = has_position;
-    view->get_output()->emit_signal("view-mapped", &data);
-    view->emit_signal("mapped", &data);
+
+    view->emit(&data);
+    view->get_output()->emit(&data);
+    wf::get_core().emit(&data);
 }
 
 void wf::emit_ping_timeout_signal(wayfire_view view)
@@ -360,12 +362,15 @@ void wf::view_interface_t::emit_view_unmap()
 
     if (get_output())
     {
-        get_output()->emit_signal("view-unmapped", &data);
-        get_output()->emit_signal("view-disappeared", &data);
+        get_output()->emit(&data);
+
+        view_disappeared_signal disappeared_data;
+        data.view = self();
+        get_output()->emit_signal("view-disappeared", &disappeared_data);
     }
 
-    emit_signal("unmapped", &data);
     this->emit(&data);
+    wf::get_core().emit(&data);
 }
 
 void wf::view_interface_t::emit_view_pre_unmap()
@@ -375,10 +380,11 @@ void wf::view_interface_t::emit_view_pre_unmap()
 
     if (get_output())
     {
-        get_output()->emit_signal("view-pre-unmapped", &data);
+        get_output()->emit(&data);
     }
 
-    emit_signal("pre-unmapped", &data);
+    emit(&data);
+    wf::get_core().emit(&data);
 }
 
 void wf::wlr_view_t::destroy()

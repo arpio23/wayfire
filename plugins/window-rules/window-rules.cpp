@@ -17,46 +17,47 @@
 
 #include "lambda-rules-registration.hpp"
 #include "view-action-interface.hpp"
+#include "wayfire/signal-provider.hpp"
 
 class wayfire_window_rules_t : public wf::per_output_plugin_instance_t
 {
   public:
     void init() override;
     void fini() override;
-    void apply(const std::string & signal, wf::signal_data_t *data);
+    void apply(const std::string & signal, wayfire_view view);
 
   private:
     void setup_rules_from_config();
     wf::lexer_t _lexer;
 
     // Created rule handler.
-    wf::signal_connection_t _created = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
     {
-        apply("created", data);
+        apply("created", ev->view);
     };
 
     // Maximized rule handler.
     wf::signal_connection_t _maximized = [=] (wf::signal_data_t *data)
     {
-        apply("maximized", data);
+        apply("maximized", wf::get_signaled_view(data));
     };
 
     // Unaximized rule handler.
     wf::signal_connection_t _unmaximized = [=] (wf::signal_data_t *data)
     {
-        apply("unmaximized", data);
+        apply("unmaximized", wf::get_signaled_view(data));
     };
 
     // Minimized rule handler.
     wf::signal_connection_t _minimized = [=] (wf::signal_data_t *data)
     {
-        apply("minimized", data);
+        apply("minimized", wf::get_signaled_view(data));
     };
 
     // Fullscreened rule handler.
     wf::signal_connection_t _fullscreened = [=] (wf::signal_data_t *data)
     {
-        apply("fullscreened", data);
+        apply("fullscreened", wf::get_signaled_view(data));
     };
 
     // Auto-reload on changes to config file
@@ -81,7 +82,7 @@ void wayfire_window_rules_t::init()
 
     setup_rules_from_config();
 
-    output->connect_signal("view-mapped", &_created);
+    output->connect(&on_view_mapped);
     output->connect_signal("view-tiled", &_maximized);
     output->connect_signal("view-tiled", &_unmaximized);
     output->connect_signal("view-minimized", &_minimized);
@@ -98,15 +99,8 @@ void wayfire_window_rules_t::fini()
     }
 }
 
-void wayfire_window_rules_t::apply(const std::string & signal,
-    wf::signal_data_t *data)
+void wayfire_window_rules_t::apply(const std::string & signal, wayfire_view view)
 {
-    if (data == nullptr)
-    {
-        return;
-    }
-
-    auto view = get_signaled_view(data);
     if (view == nullptr)
     {
         LOGE("View is null.");

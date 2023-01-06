@@ -267,6 +267,14 @@ class wayfire_blur : public wf::per_output_plugin_instance_t
     wf::button_callback button_toggle;
     wf::signal_connection_t view_attached, view_detached;
 
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
+    {
+        if (blur_by_default.matches(ev->view))
+        {
+            add_transformer(ev->view);
+        }
+    };
+
     wf::view_matcher_t blur_by_default{"blur/blur_by_default"};
     wf::option_wrapper_t<std::string> method_opt{"blur/method"};
     wf::option_wrapper_t<wf::buttonbinding_t> toggle_button{"blur/toggle"};
@@ -365,11 +373,10 @@ class wayfire_blur : public wf::per_output_plugin_instance_t
             pop_transformer(view);
         });
         output->connect_signal("view-attached", &view_attached);
-        output->connect_signal("view-mapped", &view_attached);
         output->connect_signal("view-detached", &view_detached);
+        output->connect(&on_view_mapped);
 
-        for (auto& view :
-             output->workspace->get_views_in_layer(wf::ALL_LAYERS))
+        for (auto& view : output->workspace->get_views_in_layer(wf::ALL_LAYERS))
         {
             if (blur_by_default.matches(view))
             {

@@ -12,6 +12,7 @@
 #include "fire/fire.hpp"
 #include "wayfire/plugin.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-provider.hpp"
 #include <wayfire/matcher.hpp>
 
 void animation_base::init(wayfire_view, int, wf_animation_type)
@@ -233,8 +234,8 @@ class wayfire_animation : public wf::plugin_interface_t, private wf::per_output_
 
     void handle_new_output(wf::output_t *output) override
     {
-        output->connect_signal("view-mapped", &on_view_mapped);
-        output->connect_signal("view-pre-unmapped", &on_view_unmapped);
+        output->connect(&on_view_mapped);
+        output->connect(&on_view_pre_unmap);
         output->connect_signal("start-rendering", &on_render_start);
         output->connect_signal("view-minimize-request", &on_minimize_request);
     }
@@ -353,43 +354,41 @@ class wayfire_animation : public wf::plugin_interface_t, private wf::per_output_
     }
 
     /* TODO: enhance - add more animations */
-    wf::signal_connection_t on_view_mapped =
-        [=] (wf::signal_data_t *ddata) -> void
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
     {
-        auto view = get_signaled_view(ddata);
-        auto animation = get_animation_for_view(open_animation, view);
+        auto animation = get_animation_for_view(open_animation, ev->view);
 
         if (animation.animation_name == "fade")
         {
-            set_animation<fade_animation>(view, ANIMATION_TYPE_MAP,
+            set_animation<fade_animation>(ev->view, ANIMATION_TYPE_MAP,
                 animation.duration, animation.animation_name);
         } else if (animation.animation_name == "zoom")
         {
-            set_animation<zoom_animation>(view, ANIMATION_TYPE_MAP,
+            set_animation<zoom_animation>(ev->view, ANIMATION_TYPE_MAP,
                 animation.duration, animation.animation_name);
         } else if (animation.animation_name == "fire")
         {
-            set_animation<FireAnimation>(view, ANIMATION_TYPE_MAP,
+            set_animation<FireAnimation>(ev->view, ANIMATION_TYPE_MAP,
                 animation.duration, animation.animation_name);
         }
     };
 
-    wf::signal_connection_t on_view_unmapped = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_pre_unmap_signal> on_view_pre_unmap =
+        [=] (wf::view_pre_unmap_signal *ev)
     {
-        auto view = get_signaled_view(data);
-        auto animation = get_animation_for_view(close_animation, view);
+        auto animation = get_animation_for_view(close_animation, ev->view);
 
         if (animation.animation_name == "fade")
         {
-            set_animation<fade_animation>(view, ANIMATION_TYPE_UNMAP,
+            set_animation<fade_animation>(ev->view, ANIMATION_TYPE_UNMAP,
                 animation.duration, animation.animation_name);
         } else if (animation.animation_name == "zoom")
         {
-            set_animation<zoom_animation>(view, ANIMATION_TYPE_UNMAP,
+            set_animation<zoom_animation>(ev->view, ANIMATION_TYPE_UNMAP,
                 animation.duration, animation.animation_name);
         } else if (animation.animation_name == "fire")
         {
-            set_animation<FireAnimation>(view, ANIMATION_TYPE_UNMAP,
+            set_animation<FireAnimation>(ev->view, ANIMATION_TYPE_UNMAP,
                 animation.duration, animation.animation_name);
         }
     };

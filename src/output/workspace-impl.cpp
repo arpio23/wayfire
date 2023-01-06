@@ -18,6 +18,7 @@
 #include "wayfire/option-wrapper.hpp"
 #include "wayfire/scene-input.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-provider.hpp"
 
 namespace wf
 {
@@ -710,6 +711,11 @@ class workspace_manager::impl
         update_promoted_views();
     };
 
+    signal::connection_t<view_unmapped_signal> on_view_unmap = [=] (view_unmapped_signal *ev)
+    {
+        update_promoted_views();
+    };
+
     std::unique_ptr<workspace_implementation_t> workspace_impl;
 
   public:
@@ -728,7 +734,7 @@ class workspace_manager::impl
         o->connect_signal("view-change-workspace", &view_changed_workspace);
         o->connect_signal("output-configuration-changed", &output_geometry_changed);
         o->connect_signal("view-fullscreen", &on_view_state_updated);
-        o->connect_signal("view-unmapped", &on_view_state_updated);
+        o->connect(&on_view_unmap);
     }
 
     workspace_implementation_t *get_implementation()

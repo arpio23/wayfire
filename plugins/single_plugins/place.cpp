@@ -1,3 +1,4 @@
+#include "wayfire/signal-provider.hpp"
 #include <wayfire/per-output-plugin.hpp>
 #include <wayfire/view.hpp>
 #include <wayfire/core.hpp>
@@ -6,13 +7,10 @@
 
 class wayfire_place_window : public wf::per_output_plugin_instance_t
 {
-    wf::signal_connection_t created_cb = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
     {
-        auto ev   = (wf::view_mapped_signal*)(data);
-        auto view = get_signaled_view(data);
-
-        if ((view->role != wf::VIEW_ROLE_TOPLEVEL) || view->parent ||
-            view->fullscreen || view->tiled_edges || ev->is_positioned)
+        if ((ev->view->role != wf::VIEW_ROLE_TOPLEVEL) || ev->view->parent ||
+            ev->view->fullscreen || ev->view->tiled_edges || ev->is_positioned)
         {
             return;
         }
@@ -23,16 +21,16 @@ class wayfire_place_window : public wf::per_output_plugin_instance_t
         std::string mode = placement_mode;
         if (mode == "cascade")
         {
-            cascade(view, workarea);
+            cascade(ev->view, workarea);
         } else if (mode == "maximize")
         {
-            maximize(view, workarea);
+            maximize(ev->view, workarea);
         } else if (mode == "random")
         {
-            random(view, workarea);
+            random(ev->view, workarea);
         } else
         {
-            center(view, workarea);
+            center(ev->view, workarea);
         }
     };
 
@@ -64,7 +62,7 @@ class wayfire_place_window : public wf::per_output_plugin_instance_t
         cascade_y = workarea.y;
 
         output->connect_signal("workarea-changed", &workarea_changed_cb);
-        output->connect_signal("view-mapped", &created_cb);
+        output->connect(&on_view_mapped);
     }
 
     void cascade(wayfire_view & view, wf::geometry_t workarea)

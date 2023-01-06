@@ -13,30 +13,21 @@
 #include "wayfire/signal-definitions.hpp"
 #include "wayfire/signal-provider.hpp"
 
-class wayfire_demo_ipc : public wf::plugin_interface_t, private wf::per_output_tracker_mixin_t<>
+class wayfire_demo_ipc : public wf::plugin_interface_t
 {
   public:
     void init() override
     {
-        init_output_tracking();
         method_repository->register_method("demo-ipc/watch", on_client_watch);
         method_repository->register_method("demo-ipc/view-info", get_view_info);
         method_repository->register_method("demo-ipc/output-info", get_output_info);
         method_repository->register_method("demo-ipc/view-set-geometry", set_view_geometry);
         ipc_server->connect(&on_client_disconnected);
+        wf::get_core().connect(&on_view_mapped);
     }
-
-    void handle_new_output(wf::output_t *output) override
-    {
-        output->connect_signal("view-mapped", &on_view_mapped);
-    }
-
-    void handle_output_removed(wf::output_t *output) override
-    {}
 
     void fini() override
     {
-        fini_output_tracking();
         method_repository->unregister_method("demo-ipc/watch");
         method_repository->unregister_method("demo-ipc/view-info");
         method_repository->unregister_method("demo-ipc/output-info");
@@ -111,10 +102,8 @@ class wayfire_demo_ipc : public wf::plugin_interface_t, private wf::per_output_t
         clients.erase(ev->client);
     };
 
-    wf::signal_connection_t on_view_mapped = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
     {
-        auto ev = static_cast<wf::view_mapped_signal*>(data);
-
         nlohmann::json event;
         event["event"] = "view-mapped";
         event["view"]  = view_to_json(ev->view);

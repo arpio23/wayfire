@@ -340,32 +340,37 @@ wayfire_view get_signaled_view(wf::signal_data_t *data);
 using view_created_signal = _view_signal;
 
 /**
- * name: mapped
- * on: view, output(view-)
- * when: After the view becomes mapped. This signal must also be emitted from
- *   all compositor views.
+ * on: view, output, core
+ * when: After the view becomes mapped. This signal must also be emitted from all compositor views.
  */
-struct view_mapped_signal : public _view_signal
+struct view_mapped_signal
 {
+    wayfire_view view;
+
     /* Indicates whether the position already has its initial position */
     bool is_positioned = false;
 };
 
 /**
- * name: pre-unmapped
- * on: view, output(view-)
+ * on: view, output, core
  * when: Immediately before unmapping a mapped view. The signal may not be
  *   emitted from all views, but it is necessary for unmap animations to work.
  */
-using view_pre_unmap_signal = _view_signal;
+struct view_pre_unmap_signal
+{
+    wayfire_view view;
+};
 
 /**
  * name: unmapped
- * on: view, output(view-)
+ * on: view, output, core
  * when: After a previously mapped view becomes unmapped. This must be emitted
  *   for all views.
  */
-using view_unmapped_signal = _view_signal;
+struct view_unmapped_signal
+{
+    wayfire_view view;
+};
 
 /**
  * name: set-output
