@@ -569,7 +569,7 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
         view->get_output()->connect_signal("workspace-changed",
             &on_workspace_changed);
 
-        view->connect_signal("unmapped", &view_removed);
+        view->connect(&on_view_unmap);
         view->connect_signal("tiled", &view_state_changed);
         view->connect_signal("fullscreen", &view_state_changed);
         view->connect_signal("set-output", &view_output_changed);
@@ -623,7 +623,7 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
     wayfire_view view;
     wf::effect_hook_t pre_hook;
 
-    wf::signal_connection_t view_removed = [=] (wf::signal_data_t*)
+    wf::signal::connection_t<wf::view_unmapped_signal> on_view_unmap = [=] (wf::view_unmapped_signal*)
     {
         destroy_self();
     };

@@ -9,6 +9,7 @@
 #include "wayfire/scene-operations.hpp"
 #include "wayfire/scene-render.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include <memory>
 #include <wayfire/nonstd/reverse.hpp>
 #include <wayfire/plugins/common/util.hpp>
@@ -479,7 +480,7 @@ class core_drag_t : public signal_provider_t
             start_wobbly_rel(v, dragged.transformer->relative_grab);
 
             this->all_views.push_back(dragged);
-            v->connect_signal("unmapped", &on_view_unmap);
+            v->connect(&on_view_unmap);
         }
 
         // Setup overlay hooks
@@ -670,7 +671,7 @@ class core_drag_t : public signal_provider_t
         }
     }
 
-    wf::signal_connection_t on_view_unmap = [=] (auto *ev)
+    wf::signal::connection_t<view_unmapped_signal> on_view_unmap = [=] (auto *ev)
     {
         handle_input_released();
     };

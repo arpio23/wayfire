@@ -12,6 +12,7 @@
 #include "wayfire/scene-input.hpp"
 #include "wayfire/scene-operations.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-provider.hpp"
 
 namespace wf
 {
@@ -291,10 +292,10 @@ class tile_plugin_t : public wf::per_output_plugin_instance_t, public wf::pointe
         }
     };
 
-    signal_connection_t on_view_unmapped = [=] (signal_data_t *data)
+    wf::signal::connection_t<view_unmapped_signal> on_view_unmapped = [=] (wf::view_unmapped_signal *ev)
     {
         stop_controller(true);
-        auto node = wf::tile::view_node_t::get_node(get_signaled_view(data));
+        auto node = wf::tile::view_node_t::get_node(ev->view);
         if (node)
         {
             detach_view(node);
@@ -578,20 +579,17 @@ class tile_plugin_t : public wf::per_output_plugin_instance_t, public wf::pointe
         output->workspace->set_workspace_implementation(
             std::make_unique<tile_workspace_implementation_t>(), true);
 
-        output->connect_signal("view-unmapped", &on_view_unmapped);
+        output->connect(&on_view_unmapped);
         output->connect_signal("view-layer-attached", &on_view_attached);
         output->connect_signal("view-layer-detached", &on_view_detached);
         output->connect_signal("workarea-changed", &on_workarea_changed);
         output->connect_signal("view-tile-request", &on_tile_request);
-        output->connect_signal("view-fullscreen-request",
-            &on_fullscreen_request);
+        output->connect_signal("view-fullscreen-request", &on_fullscreen_request);
         output->connect_signal("view-focused", &on_focus_changed);
         output->connect_signal("view-change-workspace", &on_view_change_workspace);
         output->connect_signal("view-minimize-request", &on_view_minimized);
-        output->connect_signal("workspace-grid-changed",
-            &on_workspace_grid_changed);
-        wf::get_core().connect_signal("view-pre-moved-to-output",
-            &on_view_pre_moved_to_output);
+        output->connect_signal("workspace-grid-changed", &on_workspace_grid_changed);
+        wf::get_core().connect_signal("view-pre-moved-to-output", &on_view_pre_moved_to_output);
 
         setup_callbacks();
     }

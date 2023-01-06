@@ -75,7 +75,7 @@ class wf_wrot : public wf::per_output_plugin_instance_t, public wf::pointer_inte
         }
 
         output->focus_view(current_view, true);
-        current_view->connect_signal("unmapped", &current_view_unmapped);
+        current_view->connect(&current_view_unmapped);
         input_grab->grab_input(wf::scene::layer::OVERLAY);
 
         last_position = output->get_cursor_position();
@@ -101,10 +101,9 @@ class wf_wrot : public wf::per_output_plugin_instance_t, public wf::pointer_inte
         return true;
     };
 
-    wf::signal_connection_t current_view_unmapped = [this] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_unmapped_signal> current_view_unmapped = [this] (auto)
     {
-        auto view = wf::get_signaled_view(data);
-        if (input_grab->is_grabbed() && (current_view == view))
+        if (input_grab->is_grabbed())
         {
             current_view = nullptr;
             input_released();
@@ -192,7 +191,7 @@ class wf_wrot : public wf::per_output_plugin_instance_t, public wf::pointer_inte
             }
 
             output->focus_view(current_view, true);
-            current_view->connect_signal("unmapped", &current_view_unmapped);
+            current_view->connect(&current_view_unmapped);
             input_grab->grab_input(wf::scene::layer::OVERLAY);
 
             last_position = output->get_cursor_position();

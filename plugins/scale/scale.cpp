@@ -28,6 +28,7 @@
 #include "wayfire/plugin.hpp"
 #include "wayfire/scene-input.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-provider.hpp"
 #include "wayfire/view.hpp"
 
 using namespace wf::animation;
@@ -1082,15 +1083,25 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         layout_slots(get_views());
     };
 
-    /* New view or view moved to output with scale active */
-    wf::signal_connection_t view_attached = [this] (wf::signal_data_t *data)
+    void handle_new_view(wayfire_view view)
     {
-        if (!should_scale_view(get_signaled_view(data)))
+        if (!should_scale_view(view))
         {
             return;
         }
 
         layout_slots(get_views());
+    }
+
+    /* New view or view moved to output with scale active */
+    wf::signal_connection_t view_attached = [this] (wf::signal_data_t *data)
+    {
+        handle_new_view(wf::get_signaled_view(data));
+    };
+
+    wf::signal::connection_t<wf::view_mapped_signal> on_view_mapped = [=] (wf::view_mapped_signal *ev)
+    {
+        handle_new_view(ev->view);
     };
 
     void handle_view_disappeared(wayfire_view view)
@@ -1158,12 +1169,9 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     };
 
     /* View unmapped */
-    wf::signal_connection_t view_unmapped{[this] (wf::signal_data_t *data)
-        {
-            auto view = get_signaled_view(data);
-
-            check_focus_view(view);
-        }
+    wf::signal::connection_t<wf::view_unmapped_signal> view_unmapped = [=] (wf::view_unmapped_signal *ev)
+    {
+        check_focus_view(ev->view);
     };
 
     /* View focused. This handler makes sure our view remains focused */
@@ -1319,11 +1327,11 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         layout_slots(get_views());
 
         output->connect_signal("view-layer-attached", &view_attached);
-        output->connect_signal("view-mapped", &view_attached);
+        output->connect(&on_view_mapped);
         output->connect_signal("workspace-changed", &workspace_changed);
         output->connect_signal("view-layer-detached", &view_detached);
         output->connect_signal("view-minimized", &view_minimized);
-        output->connect_signal("view-unmapped", &view_unmapped);
+        output->connect(&view_unmapped);
         output->connect_signal("view-focused", &view_focused);
 
         fade_out_all_except(current_focus_view);

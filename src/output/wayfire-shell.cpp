@@ -327,7 +327,7 @@ class wfs_surface
     wl_resource *resource;
     wayfire_view view;
 
-    wf::signal_connection_t on_unmap = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_unmapped_signal> on_unmap = [=] (auto)
     {
         view = nullptr;
     };
@@ -336,12 +336,9 @@ class wfs_surface
     wfs_surface(wayfire_view view, wl_client *client, int id)
     {
         this->view = view;
-
-        resource = wl_resource_create(client, &zwf_surface_v2_interface, 1, id);
-        wl_resource_set_implementation(resource, &zwf_surface_impl,
-            this, handle_surface_destroy);
-
-        view->connect_signal("unmapped", &on_unmap);
+        resource   = wl_resource_create(client, &zwf_surface_v2_interface, 1, id);
+        wl_resource_set_implementation(resource, &zwf_surface_impl, this, handle_surface_destroy);
+        view->connect(&on_unmap);
     }
 
     ~wfs_surface() = default;
