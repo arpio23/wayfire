@@ -150,11 +150,11 @@ class wayfire_idle_plugin : public wf::per_output_plugin_instance_t
         return true;
     };
 
-    wf::signal_connection_t fullscreen_state_changed{[this] (wf::signal_data_t *data)
-        {
-            has_fullscreen = data != nullptr;
-            update_fullscreen();
-        }
+    wf::signal::connection_t<wf::fullscreen_layer_focused_signal> fullscreen_state_changed =
+        [=] (wf::fullscreen_layer_focused_signal *ev)
+    {
+        this->has_fullscreen = ev->has_promoted;
+        update_fullscreen();
     };
 
     wf::config::option_base_t::updated_callback_t disable_on_fullscreen_changed =
@@ -190,11 +190,8 @@ class wayfire_idle_plugin : public wf::per_output_plugin_instance_t
             global_idle->hotkey_inhibitor.emplace();
         }
 
-        output->add_activator(
-            wf::option_wrapper_t<wf::activatorbinding_t>{"idle/toggle"},
-            &toggle);
-        output->connect_signal("fullscreen-layer-focused",
-            &fullscreen_state_changed);
+        output->add_activator(wf::option_wrapper_t<wf::activatorbinding_t>{"idle/toggle"}, &toggle);
+        output->connect(&fullscreen_state_changed);
         disable_on_fullscreen.set_callback(disable_on_fullscreen_changed);
 
         if (output->get_active_view() && output->get_active_view()->fullscreen)

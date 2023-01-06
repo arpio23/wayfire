@@ -200,7 +200,7 @@ class wfs_output
     void disconnect_from_output()
     {
         wf::get_core().output_layout->disconnect(&on_output_removed);
-        output->disconnect_signal(&on_fullscreen_layer_focused);
+        on_fullscreen_layer_focused.disconnect();
     }
 
     wf::signal::connection_t<wf::output_removed_signal> on_output_removed =
@@ -213,10 +213,10 @@ class wfs_output
         }
     };
 
-    wf::signal_connection_t on_fullscreen_layer_focused =
-        [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::fullscreen_layer_focused_signal> on_fullscreen_layer_focused =
+        [=] (wf::fullscreen_layer_focused_signal *ev)
     {
-        if (data != nullptr)
+        if (ev->has_promoted)
         {
             zwf_output_v2_send_enter_fullscreen(resource);
         } else
@@ -232,7 +232,7 @@ class wfs_output
 
         resource = wl_resource_create(client, &zwf_output_v2_interface, 1, id);
         wl_resource_set_implementation(resource, &zwf_output_impl, this, handle_output_destroy);
-        output->connect_signal("fullscreen-layer-focused", &on_fullscreen_layer_focused);
+        output->connect(&on_fullscreen_layer_focused);
         wf::get_core().output_layout->connect(&on_output_removed);
     }
 

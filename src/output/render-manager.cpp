@@ -812,7 +812,7 @@ class wf::render_manager::impl
 
             wf::output_start_rendering_signal data;
             data.output = output;
-            output->emit_signal("start-rendering", &data);
+            output->emit(&data);
         }
     }
 

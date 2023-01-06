@@ -1,5 +1,6 @@
 #pragma once
 
+#include "wayfire/signal-definitions.hpp"
 #include <memory>
 #include <wayfire/object.hpp>
 #include <wayfire/output.hpp>
@@ -98,7 +99,7 @@ class workspace_stream_pool_t : public wf::custom_data_t
     workspace_stream_pool_t(wf::output_t *output)
     {
         this->output = output;
-        output->connect_signal("workspace-grid-changed", &on_workspace_grid_changed);
+        output->connect(&on_workspace_grid_changed);
         resize_pool(this->output->workspace->get_workspace_grid_size());
     }
 
@@ -135,7 +136,7 @@ class workspace_stream_pool_t : public wf::custom_data_t
     wf::output_t *output;
     std::vector<std::vector<std::unique_ptr<wf::workspace_stream_t>>> streams;
 
-    wf::signal_connection_t on_workspace_grid_changed = [=] (auto)
+    wf::signal::connection_t<workspace_grid_changed_signal> on_workspace_grid_changed = [=] (auto)
     {
         resize_pool(this->output->workspace->get_workspace_grid_size());
     };

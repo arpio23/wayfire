@@ -46,7 +46,7 @@ class vswitch : public wf::per_output_plugin_instance_t
   public:
     void init()
     {
-        output->connect_signal("set-workspace-request", &on_set_workspace_request);
+        output->connect(&on_set_workspace_request);
         output->connect_signal("view-disappeared", &on_grabbed_view_disappear);
 
         algorithm = std::make_unique<vswitch_basic_plugin>(output,
@@ -175,10 +175,9 @@ class vswitch : public wf::per_output_plugin_instance_t
         }
     };
 
-    wf::signal_connection_t on_set_workspace_request = [=] (
-        wf::signal_data_t *data)
+    wf::signal::connection_t<wf::workspace_change_request_signal> on_set_workspace_request =
+        [=] (wf::workspace_change_request_signal *ev)
     {
-        auto ev = static_cast<wf::workspace_change_request_signal*>(data);
         if (ev->old_viewport == ev->new_viewport)
         {
             // nothing to do

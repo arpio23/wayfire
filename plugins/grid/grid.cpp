@@ -155,7 +155,7 @@ class wayfire_grid : public wf::per_output_plugin_instance_t
 
         output->add_activator(restore_opt, &restore);
 
-        output->connect_signal("workarea-changed", &on_workarea_changed);
+        output->connect(&on_workarea_changed);
         output->connect_signal("grid-snap-view", &on_snap_signal);
         output->connect_signal("grid-query-geometry", &on_snap_query);
         output->connect_signal("view-tile-request", &on_maximize_signal);
@@ -216,9 +216,9 @@ class wayfire_grid : public wf::per_output_plugin_instance_t
         return area;
     }
 
-    wf::signal_connection_t on_workarea_changed = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::workarea_changed_signal> on_workarea_changed =
+        [=] (wf::workarea_changed_signal *ev)
     {
-        auto ev = static_cast<wf::workarea_changed_signal*>(data);
         for (auto& view : output->workspace->get_views_in_layer(wf::LAYER_WORKSPACE))
         {
             if (!view->is_mapped())

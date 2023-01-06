@@ -70,7 +70,7 @@ class tile_plugin_t : public wf::per_output_plugin_instance_t, public wf::pointe
 
     const wf::tile::split_direction_t default_split = wf::tile::SPLIT_VERTICAL;
 
-    wf::signal_connection_t on_workspace_grid_changed = [=] (auto)
+    wf::signal::connection_t<wf::workspace_grid_changed_signal> on_workspace_grid_changed = [=] (auto)
     {
         resize_roots(output->workspace->get_workspace_grid_size());
     };
@@ -346,7 +346,7 @@ class tile_plugin_t : public wf::per_output_plugin_instance_t, public wf::pointe
         }
     };
 
-    signal_connection_t on_workarea_changed = [=] (signal_data_t *data)
+    wf::signal::connection_t<workarea_changed_signal> on_workarea_changed = [=] (auto)
     {
         update_root_size(output->workspace->get_workarea());
     };
@@ -582,13 +582,13 @@ class tile_plugin_t : public wf::per_output_plugin_instance_t, public wf::pointe
         output->connect(&on_view_unmapped);
         output->connect_signal("view-layer-attached", &on_view_attached);
         output->connect_signal("view-layer-detached", &on_view_detached);
-        output->connect_signal("workarea-changed", &on_workarea_changed);
+        output->connect(&on_workarea_changed);
         output->connect_signal("view-tile-request", &on_tile_request);
         output->connect_signal("view-fullscreen-request", &on_fullscreen_request);
         output->connect_signal("view-focused", &on_focus_changed);
         output->connect_signal("view-change-workspace", &on_view_change_workspace);
         output->connect_signal("view-minimize-request", &on_view_minimized);
-        output->connect_signal("workspace-grid-changed", &on_workspace_grid_changed);
+        output->connect(&on_workspace_grid_changed);
         wf::get_core().connect_signal("view-pre-moved-to-output", &on_view_pre_moved_to_output);
 
         setup_callbacks();

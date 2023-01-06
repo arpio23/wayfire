@@ -1128,15 +1128,15 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     };
 
     /* Workspace changed */
-    wf::signal_connection_t workspace_changed{[this] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::workspace_changed_signal> workspace_changed =
+        [=] (wf::workspace_changed_signal *ev)
+    {
+        if (current_focus_view)
         {
-            if (current_focus_view)
-            {
-                output->focus_view(current_focus_view, true);
-            }
-
-            layout_slots(get_views());
+            output->focus_view(current_focus_view, true);
         }
+
+        layout_slots(get_views());
     };
 
     /* View geometry changed. Also called when workspace changes */
@@ -1328,7 +1328,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
 
         output->connect_signal("view-layer-attached", &view_attached);
         output->connect(&on_view_mapped);
-        output->connect_signal("workspace-changed", &workspace_changed);
+        output->connect(&workspace_changed);
         output->connect_signal("view-layer-detached", &view_detached);
         output->connect_signal("view-minimized", &view_minimized);
         output->connect(&view_unmapped);

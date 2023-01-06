@@ -519,8 +519,8 @@ void wf::compositor_core_impl_t::focus_output(wf::output_t *wo)
 
     wf::output_gain_focus_signal data;
     data.output = active_output;
-    active_output->emit_signal("gain-focus", &data);
-    this->emit_signal("output-gain-focus", &data);
+    active_output->emit(&data);
+    this->emit(&data);
 }
 
 wf::output_t*wf::compositor_core_impl_t::get_active_output()

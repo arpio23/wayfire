@@ -2,6 +2,7 @@
 #include "wayfire/plugins/common/util.hpp"
 #include "wayfire/render-manager.hpp"
 #include "wayfire/scene-input.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include <memory>
 #include <wayfire/per-output-plugin.hpp>
 #include <wayfire/output.hpp>
@@ -143,7 +144,7 @@ class wayfire_expo : public wf::per_output_plugin_instance_t, public wf::keyboar
         drag_helper->connect_signal("done", &on_drag_done);
 
         resize_ws_fade();
-        output->connect_signal("workspace-grid-changed", &on_workspace_grid_changed);
+        output->connect(&on_workspace_grid_changed);
     }
 
     void handle_pointer_button(const wlr_pointer_button_event& event) override
@@ -719,7 +720,7 @@ class wayfire_expo : public wf::per_output_plugin_instance_t, public wf::keyboar
         }
     }
 
-    wf::signal_connection_t on_workspace_grid_changed = [=] (auto)
+    wf::signal::connection_t<wf::workspace_grid_changed_signal> on_workspace_grid_changed = [=] (auto)
     {
         resize_ws_fade();
 

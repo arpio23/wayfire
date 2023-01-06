@@ -788,7 +788,7 @@ struct output_layout_output_t
             wf::output_configuration_changed_signal data{current_state};
             data.output = output.get();
             data.changed_fields = changed_fields;
-            output->emit_signal("output-configuration-changed", &data);
+            output->emit(&data);
         }
     }
 
@@ -1444,7 +1444,8 @@ class output_layout_t::impl
             }
         }
 
-        get_core().output_layout->emit_signal("configuration-changed", nullptr);
+        wf::output_layout_configuration_changed_signal ev;
+        get_core().output_layout->emit(&ev);
 
         if (count_enabled > 0)
         {
