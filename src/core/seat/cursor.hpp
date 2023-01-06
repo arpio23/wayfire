@@ -3,6 +3,7 @@
 
 #include "seat.hpp"
 #include "wayfire/plugin.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include "wayfire/util.hpp"
 
 namespace wf
@@ -64,7 +65,7 @@ struct cursor_t
     // Seat events
     wf::wl_listener_wrapper request_set_cursor;
 
-    wf::signal_connection_t config_reloaded;
+    wf::signal::connection_t<wf::reload_config_signal> config_reloaded;
     wf::seat_t *seat;
 
     wlr_cursor *cursor = NULL;

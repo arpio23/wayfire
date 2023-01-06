@@ -61,7 +61,7 @@ class wayfire_window_rules_t : public wf::per_output_plugin_instance_t
     };
 
     // Auto-reload on changes to config file
-    wf::signal_connection_t _reload_config = [=] (wf::signal_data_t*)
+    wf::signal::connection_t<wf::reload_config_signal> _reload_config = [=] (wf::reload_config_signal *ev)
     {
         setup_rules_from_config();
     };
@@ -87,7 +87,7 @@ void wayfire_window_rules_t::init()
     output->connect_signal("view-tiled", &_unmaximized);
     output->connect_signal("view-minimized", &_minimized);
     output->connect_signal("view-fullscreen", &_fullscreened);
-    wf::get_core().connect_signal("reload-config", &_reload_config);
+    wf::get_core().connect(&_reload_config);
 }
 
 void wayfire_window_rules_t::fini()

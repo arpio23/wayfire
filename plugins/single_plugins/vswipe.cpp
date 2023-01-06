@@ -20,6 +20,7 @@
 #include <wayfire/plugins/common/geometry-animation.hpp>
 #include "vswipe-processing.hpp"
 #include "wayfire/plugins/common/input-grab.hpp"
+#include "wayfire/signal-provider.hpp"
 
 using namespace wf::animation;
 class vswipe_smoothing_t : public duration_t
@@ -104,9 +105,9 @@ class vswipe : public wf::per_output_plugin_instance_t
     {
         input_grab = std::make_unique<wf::input_grab_t>("vswipe", output);
 
-        wf::get_core().connect_signal("pointer_swipe_begin", &on_swipe_begin);
-        wf::get_core().connect_signal("pointer_swipe_update", &on_swipe_update);
-        wf::get_core().connect_signal("pointer_swipe_end", &on_swipe_end);
+        wf::get_core().connect(&on_swipe_begin);
+        wf::get_core().connect(&on_swipe_update);
+        wf::get_core().connect(&on_swipe_end);
 
         wall = std::make_unique<wf::workspace_wall_t>(output);
         wall->connect_signal("frame", &this->on_frame);
@@ -147,7 +148,8 @@ class vswipe : public wf::per_output_plugin_instance_t
     };
 
     template<class wlr_event> using event = wf::input_event_signal<wlr_event>;
-    wf::signal_connection_t on_swipe_begin = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<event<wlr_pointer_swipe_begin_event>> on_swipe_begin =
+        [=] (event<wlr_pointer_swipe_begin_event> *ev)
     {
         if (!enable_horizontal && !enable_vertical)
         {
@@ -159,9 +161,7 @@ class vswipe : public wf::per_output_plugin_instance_t
             return;
         }
 
-        auto ev = static_cast<
-            event<wlr_pointer_swipe_begin_event>*>(data)->event;
-        if (static_cast<int>(ev->fingers) != fingers)
+        if (static_cast<int>(ev->event->fingers) != fingers)
         {
             return;
         }
@@ -256,25 +256,20 @@ class vswipe : public wf::per_output_plugin_instance_t
         return UNKNOWN;
     }
 
-    wf::signal_connection_t on_swipe_update = [&] (wf::signal_data_t *data)
+    wf::signal::connection_t<event<wlr_pointer_swipe_update_event>> on_swipe_update =
+        [&] (event<wlr_pointer_swipe_update_event> *ev)
     {
         if (!state.swiping)
         {
             return;
         }
 
-        auto ev = static_cast<
-            event<wlr_pointer_swipe_update_event>*>(data)->event;
-
-        state.delta_sum.x += ev->dx / speed_factor;
-        state.delta_sum.y += ev->dy / speed_factor;
+        state.delta_sum.x += ev->event->dx / speed_factor;
+        state.delta_sum.y += ev->event->dy / speed_factor;
         if (state.direction == UNKNOWN)
         {
-            state.initial_deltas.x +=
-                std::abs(ev->dx) / speed_factor;
-            state.initial_deltas.y +=
-                std::abs(ev->dy) / speed_factor;
-
+            state.initial_deltas.x += std::abs(ev->event->dx) / speed_factor;
+            state.initial_deltas.y += std::abs(ev->event->dy) / speed_factor;
             state.direction = calculate_direction(state.initial_deltas);
             if (state.direction == UNKNOWN)
             {
@@ -285,8 +280,7 @@ class vswipe : public wf::per_output_plugin_instance_t
         } else if ((state.direction != DIAGONAL) && enable_free_movement)
         {
             /* Consider promoting to diagonal movement */
-            double other = (state.direction == HORIZONTAL ?
-                state.delta_sum.y : state.delta_sum.x);
+            double other = (state.direction == HORIZONTAL ? state.delta_sum.y : state.delta_sum.x);
             if (std::abs(other) > secondary_direction_threshold)
             {
                 state.direction = DIAGONAL;
@@ -299,34 +293,32 @@ class vswipe : public wf::per_output_plugin_instance_t
         state.delta_prev = state.delta_last;
         double current_delta_processed;
 
-        const auto& process_delta = [&] (double delta,
-                                         wf::timed_transition_t& total_delta, int ws,
-                                         int ws_max)
+        const auto& process_delta =
+            [&] (double delta, wf::timed_transition_t& total_delta, int ws, int ws_max)
         {
             current_delta_processed = vswipe_process_delta(delta, total_delta,
                 ws, ws_max, cap, fac, enable_free_movement);
 
             double new_delta_end   = total_delta.end + current_delta_processed;
-            double new_delta_start =
-                smooth_transition ? total_delta : new_delta_end;
+            double new_delta_start = smooth_transition ? total_delta : new_delta_end;
             total_delta.set(new_delta_start, new_delta_end);
         };
 
         if (state.direction & HORIZONTAL)
         {
-            process_delta(ev->dx, smooth_delta.dx, state.vx, state.vw);
+            process_delta(ev->event->dx, smooth_delta.dx, state.vx, state.vw);
         }
 
         if (state.direction & VERTICAL)
         {
-            process_delta(ev->dy, smooth_delta.dy, state.vy, state.vh);
+            process_delta(ev->event->dy, smooth_delta.dy, state.vy, state.vh);
         }
 
-        state.delta_last = {ev->dx, ev->dy};
+        state.delta_last = {ev->event->dx, ev->event->dy};
         smooth_delta.start();
     };
 
-    wf::signal_connection_t on_swipe_end = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<event<wlr_pointer_swipe_end_event>> on_swipe_end = [=] (auto)
     {
         if (!state.swiping || !output->is_plugin_active(grab_interface.name))
         {

@@ -5,6 +5,8 @@
 #include <wayfire/config/types.hpp>
 #include <wayfire/output.hpp>
 #include <wayfire/util/log.hpp>
+#include <wayfire/signal-definitions.hpp>
+#include <wayfire/nonstd/wlroots-full.hpp>
 
 namespace  wf
 {
@@ -57,8 +59,9 @@ class hotspot_instance_t
     /** Callback to execute */
     std::function<void(uint32_t)> callback;
 
-    wf::signal_connection_t on_motion_event;
-    wf::signal_connection_t on_touch_motion_event;
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_tablet_tool_axis_event>> on_tablet_axis;
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_pointer_motion_event>> on_motion_event;
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_touch_motion_event>> on_touch_motion;
 
     /** Update state based on input motion */
     void process_input_motion(wf::pointf_t gc);

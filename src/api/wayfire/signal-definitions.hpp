@@ -24,37 +24,50 @@ namespace wf
  * Core signals
  * -------------------------------------------------------------------------- */
 /**
- * name: startup-finished
  * on: core
- * when: Emitted when the Wayfire initialization has been completed and the main
- *   loop is about to start.
- * argument: unused
+ * when: Emitted when the wlroots backend has been started.
  */
+struct core_backend_started_signal
+{};
 
 /**
- * name: shutdown
+ * on: core
+ * when: Emitted when the Wayfire initialization has been completed and the main loop is about to start.
+ */
+struct core_startup_finished_signal
+{};
+
+/**
  * on: core
  * when: Right before the shutdown sequence starts.
- * argument: unused
  */
+struct core_shutdown_signal
+{};
 
 class input_device_t;
 /**
- * name: input-device-added, input-device-removed
  * on: core
- * when: Whenever a new input device is added or removed.
+ * when: Whenever a new input device is added.
  */
-struct input_device_signal : public wf::signal_data_t
+struct input_device_added_signal
 {
     nonstd::observer_ptr<input_device_t> device;
 };
 
 /**
- * name: tablet-mode, lid-state
+ * on: core
+ * when: Whenever an input device is removed.
+ */
+struct input_device_removed_signal
+{
+    nonstd::observer_ptr<input_device_t> device;
+};
+
+/**
  * on: core
  * when: When the corresponding switch device state changes.
  */
-struct switch_signal : public wf::signal_data_t
+struct switch_signal
 {
     /** The switch device */
     nonstd::observer_ptr<input_device_t> device;
@@ -80,11 +93,10 @@ enum class input_event_processing_mode_t
 };
 
 /**
- * name:
+ * Emitted for the following events:
  *   pointer_motion, pointer_motion_absolute, pointer_button, pointer_axis,
- *   pointer_swipe_begin, pointer_swipe_update, pointer_swipe_end,
- *   pointer_pinch_begin, pointer_pinch_update, pointer_pinch_end,
- *   pointer_hold_begin, pointer_hold_end,
+ *   pointer_swipe_begin, pointer_swipe_update, pointer_swipe_end, pointer_pinch_begin, pointer_pinch_update,
+ *   pointer_pinch_end, pointer_hold_begin, pointer_hold_end,
  *   keyboard_key,
  *   touch_down, touch_up, touch_motion,
  *   tablet_proximity, tablet_axis, tablet_button, tablet_tip
@@ -99,14 +111,11 @@ enum class input_event_processing_mode_t
  *   will be used instead. However plugins which modify the event must ensure
  *   that subsequent events are adjusted accordingly as well.
  *
- *   The same signals are emitted with a _post suffix after the event handling
- *   by core has finished.
- *
  * example: The pointer_motion event is emitted with data of type
  *   input_event_signal<wlr_pointer_motion_event>
  */
 template<class wlr_event_t>
-struct input_event_signal : public wf::signal_data_t
+struct input_event_signal
 {
     /* The event as it has arrived from wlroots */
     wlr_event_t *event;
@@ -122,18 +131,26 @@ struct input_event_signal : public wf::signal_data_t
 };
 
 /**
- * name: reload-config
- * on: core
- * when: When the config file is reloaded
- * argument: unused
+ * Same as @input_event_signal, but emitted after the event has been handled.
  */
+template<class wlr_event_t>
+struct post_input_event_signal
+{
+    wlr_event_t *event;
+};
 
 /**
- * name: keyboard-focus-changed
+ * on: core
+ * when: When the config file is reloaded
+ */
+struct reload_config_signal
+{};
+
+/**
  * on: core
  * when: Keyboard focus is changed (may change to nullptr).
  */
-struct keyboard_focus_changed_signal : public wf::signal_data_t
+struct keyboard_focus_changed_signal
 {
     wf::scene::node_ptr new_focus;
 };
@@ -373,14 +390,13 @@ struct view_unmapped_signal
 };
 
 /**
- * name: set-output
- * on: view
- * when: Immediately after the view's output changes. Note that child views may
- *   still be on the old output.
- * argument: The old output of the view.
+ * on: view, core
+ * when: Immediately after the view's output changes. Note that child views may still be on the old output.
  */
-struct view_set_output_signal : public wf::signal_data_t
+struct view_set_output_signal
 {
+    wayfire_view view;
+    // The previous output of the view.
     wf::output_t *output;
 };
 

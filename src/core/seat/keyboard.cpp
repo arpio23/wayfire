@@ -17,16 +17,16 @@
 
 void wf::keyboard_t::setup_listeners()
 {
-    on_config_reload.set_callback([&] (signal_data_t*)
+    on_config_reload = [=] (auto)
     {
         reload_input_options();
-    });
-    wf::get_core().connect_signal("reload-config", &on_config_reload);
+    };
+    wf::get_core().connect(&on_config_reload);
 
     on_key.set_callback([&] (void *data)
     {
         auto ev   = static_cast<wlr_keyboard_key_event*>(data);
-        auto mode = emit_device_event_signal("keyboard_key", ev);
+        auto mode = emit_device_event_signal(ev);
 
         auto& seat = wf::get_core_impl().seat;
         seat->set_keyboard(this);
@@ -57,7 +57,7 @@ void wf::keyboard_t::setup_listeners()
         }
 
         wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat);
-        emit_device_event_signal("keyboard_key_post", ev);
+        emit_device_post_event_signal(ev);
     });
 
     on_modifier.set_callback([&] (void *data)

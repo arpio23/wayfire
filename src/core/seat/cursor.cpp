@@ -23,12 +23,12 @@ wf::cursor_t::cursor_t(wf::seat_t *seat)
     wlr_cursor_warp(cursor, NULL, cursor->x, cursor->y);
     init_xcursor();
 
-    config_reloaded.set_callback([=] (wf::signal_data_t*)
+    config_reloaded = [=] (auto)
     {
         init_xcursor();
-    });
+    };
 
-    wf::get_core().connect_signal("reload-config", &config_reloaded);
+    wf::get_core().connect(&config_reloaded);
 
     request_set_cursor.set_callback([&] (void *data)
     {
@@ -60,10 +60,10 @@ void wf::cursor_t::setup_listeners()
     on_ ## evname.set_callback([&] (void *data) { \
         set_touchscreen_mode(false); \
         auto ev   = static_cast<wlr_pointer_ ## evname ## _event*>(data); \
-        auto mode = emit_device_event_signal("pointer_" #evname, ev); \
+        auto mode = emit_device_event_signal(ev); \
         seat->lpointer->handle_pointer_ ## evname(ev, mode); \
         wlr_idle_notify_activity(core.protocols.idle, core.get_current_seat()); \
-        emit_device_event_signal("pointer_" #evname "_post", ev); \
+        emit_device_post_event_signal(ev); \
     }); \
     on_ ## evname.connect(&cursor->events.evname);
 
@@ -89,14 +89,14 @@ void wf::cursor_t::setup_listeners()
     on_tablet_ ## evname.set_callback([&] (void *data) { \
         set_touchscreen_mode(false); \
         auto ev = static_cast<wlr_tablet_tool_ ## evname ## _event*>(data); \
-        auto handling_mode = emit_device_event_signal("tablet_" #evname, ev); \
+        auto handling_mode = emit_device_event_signal(ev); \
         if (ev->tablet->data) { \
             auto tablet = \
                 static_cast<wf::tablet_t*>(ev->tablet->data); \
             tablet->handle_ ## evname(ev, handling_mode); \
         } \
         wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat); \
-        emit_device_event_signal("tablet_" #evname "_post", ev); \
+        emit_device_event_signal(ev); \
     }); \
     on_tablet_ ## evname.connect(&cursor->events.tablet_tool_ ## evname);
 

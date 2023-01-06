@@ -1,5 +1,6 @@
 #include <vector>
 #include "wayfire/debug.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include <string>
 #include <wayfire/config/file.hpp>
 #include <wayfire/config-backend.hpp>
@@ -72,7 +73,8 @@ static int handle_config_updated(int fd, uint32_t mask, void *data)
         LOGD("Reloading configuration file");
 
         reload_config(fd);
-        wf::get_core().emit_signal("reload-config", nullptr);
+        wf::reload_config_signal ev;
+        wf::get_core().emit(&ev);
     } else
     {
         readd_watch(fd);

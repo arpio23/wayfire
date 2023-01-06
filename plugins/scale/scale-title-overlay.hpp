@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wayfire/signal-definitions.hpp"
+#include "wayfire/signal-provider.hpp"
 #include <string>
 
 #include <wayfire/plugin.hpp>
@@ -40,7 +42,9 @@ class scale_show_title_t
     wf::signal_connection_t scale_end;
     wf::signal_connection_t add_title_overlay;
     wf::signal_connection_t rem_title_overlay;
-    wf::signal_connection_t mouse_update;
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_pointer_motion_event>> post_motion;
+    wf::signal::connection_t<wf::post_input_event_signal<wlr_pointer_motion_absolute_event>>
+    post_absolute_motion;
 
     enum class title_overlay_t
     {

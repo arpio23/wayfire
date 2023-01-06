@@ -102,9 +102,9 @@ void wf::hotspot_instance_t::recalc_geometry() noexcept
 wf::hotspot_instance_t::hotspot_instance_t(uint32_t edges, uint32_t along, uint32_t away, int32_t timeout,
     std::function<void(uint32_t)> callback)
 {
-    wf::get_core().connect_signal("pointer_motion", &on_motion_event);
-    wf::get_core().connect_signal("tablet_axis", &on_motion_event);
-    wf::get_core().connect_signal("touch_motion", &on_touch_motion_event);
+    wf::get_core().connect(&on_motion_event);
+    wf::get_core().connect(&on_motion_event);
+    wf::get_core().connect(&on_touch_motion);
 
     this->edges = edges;
     this->along = along;
@@ -115,15 +115,20 @@ wf::hotspot_instance_t::hotspot_instance_t(uint32_t edges, uint32_t along, uint3
     recalc_geometry();
 
     // callbacks
-    on_motion_event.set_callback([=] (wf::signal_data_t *data)
+    on_tablet_axis = [=] (wf::post_input_event_signal<wlr_tablet_tool_axis_event> *ev)
     {
         process_input_motion(wf::get_core().get_cursor_position());
-    });
+    };
 
-    on_touch_motion_event.set_callback([=] (wf::signal_data_t *data)
+    on_motion_event = [=] (auto)
+    {
+        process_input_motion(wf::get_core().get_cursor_position());
+    };
+
+    on_touch_motion = [=] (auto)
     {
         process_input_motion(wf::get_core().get_touch_position(0));
-    });
+    };
 }
 
 void wf::hotspot_manager_t::update_hotspots(const container_t& activators)

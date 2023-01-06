@@ -2,6 +2,7 @@
 
 #include "wayfire/bindings-repository.hpp"
 #include "hotspot-manager.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include <wayfire/debug.hpp>
 
 struct wf::bindings_repository_t::impl
@@ -26,6 +27,10 @@ struct wf::bindings_repository_t::impl
 
     hotspot_manager_t hotspot_mgr;
 
-    wf::signal_connection_t on_config_reload;
+    wf::signal::connection_t<wf::reload_config_signal> on_config_reload = [=] (wf::reload_config_signal *ev)
+    {
+        recreate_hotspots();
+    };
+
     wf::wl_idle_call idle_recreate_hotspots;
 };

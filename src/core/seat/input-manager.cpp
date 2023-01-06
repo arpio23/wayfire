@@ -48,9 +48,9 @@ void wf::input_manager_t::handle_new_input(wlr_input_device *dev)
         ", default mapping: ", dev->name);
     input_devices.push_back(create_wf_device_for_device(dev));
 
-    wf::input_device_signal data;
+    wf::input_device_added_signal data;
     data.device = nonstd::make_observer(input_devices.back().get());
-    wf::get_core().emit_signal("input-device-added", &data);
+    wf::get_core().emit(&data);
 
     refresh_device_mappings();
 }
@@ -108,9 +108,9 @@ void wf::input_manager_t::handle_input_destroyed(wlr_input_device *dev)
     {
         if (device->get_wlr_handle() == dev)
         {
-            wf::input_device_signal data;
+            wf::input_device_removed_signal data;
             data.device = {device};
-            wf::get_core().emit_signal("input-device-removed", &data);
+            wf::get_core().emit(&data);
         }
     }
 
@@ -153,15 +153,15 @@ wf::input_manager_t::input_manager_t()
     });
     input_device_created.connect(&wf::get_core().backend->events.new_input);
 
-    config_updated.set_callback([=] (wf::signal_data_t*)
+    config_updated = [=] (auto)
     {
         for (auto& dev : input_devices)
         {
             dev->update_options();
         }
-    });
+    };
 
-    wf::get_core().connect_signal("reload-config", &config_updated);
+    wf::get_core().connect(&config_updated);
 
     output_added.set_callback([=] (output_added_signal *ev)
     {

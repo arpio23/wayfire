@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include "seat.hpp"
+#include "wayfire/signal-definitions.hpp"
+#include "wayfire/signal-provider.hpp"
 #include "wayfire/util.hpp"
 #include <wayfire/option-wrapper.hpp>
 
@@ -38,7 +40,7 @@ class keyboard_t
     wf::wl_listener_wrapper on_key, on_modifier;
     void setup_listeners();
 
-    wf::signal_connection_t on_config_reload;
+    wf::signal::connection_t<wf::reload_config_signal> on_config_reload;
     void reload_input_options();
 
     wf::option_wrapper_t<std::string>

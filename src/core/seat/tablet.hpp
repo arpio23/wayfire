@@ -3,7 +3,9 @@
 
 #include <wayfire/util.hpp>
 #include "seat.hpp"
+#include "wayfire/object.hpp"
 #include "wayfire/signal-definitions.hpp"
+#include "wayfire/signal-provider.hpp"
 
 namespace wf
 {
@@ -121,7 +123,10 @@ struct tablet_pad_t : public input_device_impl_t
     nonstd::observer_ptr<tablet_t> attached_to;
 
     wf::wl_listener_wrapper on_attach, on_button, on_strip, on_ring;
-    signal_connection_t on_input_devices_changed, on_keyboard_focus_changed;
+
+    wf::signal::connection_t<wf::input_device_added_signal> on_device_added;
+    wf::signal::connection_t<wf::input_device_removed_signal> on_device_removed;
+    wf::signal::connection_t<wf::keyboard_focus_changed_signal> on_keyboard_focus_changed;
 
     /** Attach the pad to the given tablet. */
     void attach_to_tablet(tablet_t *tablet);

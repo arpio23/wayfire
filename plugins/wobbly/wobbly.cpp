@@ -572,7 +572,7 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
         view->connect(&on_view_unmap);
         view->connect_signal("tiled", &view_state_changed);
         view->connect_signal("fullscreen", &view_state_changed);
-        view->connect_signal("set-output", &view_output_changed);
+        view->connect(&view_output_changed);
         view->connect_signal("geometry-changed", &view_geometry_changed);
 
         /* Set to free state initially but then look for the correct state */
@@ -645,34 +645,28 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
         state->handle_workspace_change(ev->old_viewport, ev->new_viewport);
     };
 
-    wf::signal_connection_t view_output_changed = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::view_set_output_signal> view_output_changed =
+        [=] (wf::view_set_output_signal *ev)
     {
-        auto sig = static_cast<wf::view_set_output_signal*>(data);
-
+        /* Wobbly is active only when there's already been an output */
+        wf::dassert(ev->output != nullptr, "wobbly cannot be active on nullptr output!");
         if (!view->get_output())
         {
             // Destructor won't be able to disconnect bc view output is invalid
-            sig->output->render->rem_effect(&pre_hook);
-
+            ev->output->render->rem_effect(&pre_hook);
             return destroy_self();
         }
 
-        /* Wobbly is active only when there's already been an output */
-        assert(sig->output);
-
         /* Translate wobbly when its output changes */
-        auto old_geometry = sig->output->get_layout_geometry();
+        auto old_geometry = ev->output->get_layout_geometry();
         auto new_geometry = view->get_output()->get_layout_geometry();
-        state->translate_model(old_geometry.x - new_geometry.x,
-            old_geometry.y - new_geometry.y);
+        state->translate_model(old_geometry.x - new_geometry.x, old_geometry.y - new_geometry.y);
 
-        sig->output->render->rem_effect(&pre_hook);
-        view->get_output()->render->add_effect(&pre_hook,
-            wf::OUTPUT_EFFECT_PRE);
+        ev->output->render->rem_effect(&pre_hook);
+        view->get_output()->render->add_effect(&pre_hook, wf::OUTPUT_EFFECT_PRE);
 
         on_workspace_changed.disconnect();
-        view->get_output()->connect_signal("workspace-changed",
-            &on_workspace_changed);
+        view->get_output()->connect_signal("workspace-changed", &on_workspace_changed);
     };
 
     std::unique_ptr<wf::iwobbly_state_t> state;

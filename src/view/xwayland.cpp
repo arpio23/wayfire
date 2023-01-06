@@ -1050,10 +1050,9 @@ void wf::init_xwayland()
     static wf::wl_listener_wrapper on_created;
     static wf::wl_listener_wrapper on_ready;
 
-    static signal_connection_t on_shutdown{[&] (void*)
-        {
-            wlr_xwayland_destroy(xwayland_handle);
-        }
+    static wf::signal::connection_t<core_shutdown_signal> on_shutdown = [=] (core_shutdown_signal *ev)
+    {
+        wlr_xwayland_destroy(xwayland_handle);
     };
 
     on_created.set_callback([] (void *data)
@@ -1092,7 +1091,7 @@ void wf::init_xwayland()
     {
         on_created.connect(&xwayland_handle->events.new_surface);
         on_ready.connect(&xwayland_handle->events.ready);
-        wf::get_core().connect_signal("shutdown", &on_shutdown);
+        wf::get_core().connect(&on_shutdown);
     }
 
 #endif
