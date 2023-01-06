@@ -82,13 +82,13 @@ class wayfire_xwayland_view_base : public wf::wlr_view_t
     /** The geometry requested by the client */
     bool self_positioned = false;
 
-    wf::signal_connection_t output_geometry_changed{[this] (wf::signal_data_t*)
+    wf::signal::connection_t<wf::output_configuration_changed_signal> output_geometry_changed =
+        [=] (wf::output_configuration_changed_signal *ev)
+    {
+        if (is_mapped())
         {
-            if (is_mapped())
-            {
-                auto wm_geometry = get_wm_geometry();
-                move(wm_geometry.x, wm_geometry.y);
-            }
+            auto wm_geometry = get_wm_geometry();
+            move(wm_geometry.x, wm_geometry.y);
         }
     };
 
@@ -487,8 +487,7 @@ class wayfire_xwayland_view_base : public wf::wlr_view_t
 
         if (wo)
         {
-            wo->connect_signal("output-configuration-changed",
-                &output_geometry_changed);
+            wo->connect(&output_geometry_changed);
         }
 
         /* Update the real position */

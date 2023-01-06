@@ -15,6 +15,7 @@
 #include "wayfire/scene-operations.hpp"
 #include "wayfire/scene-render.hpp"
 #include "wayfire/scene.hpp"
+#include "wayfire/signal-definitions.hpp"
 #include "wayfire/signal-provider.hpp"
 #include "wayfire/workspace-stream.hpp"
 #include "workspace-stream-sharing.hpp"
@@ -47,7 +48,7 @@ class workspace_wall_t : public wf::signal_provider_t
     {
         this->viewport = get_wall_rectangle();
         resize_colors();
-        output->connect_signal("workspace-grid-changed", &on_workspace_grid_changed);
+        output->connect(&on_workspace_grid_changed);
     }
 
     ~workspace_wall_t()
@@ -234,7 +235,7 @@ class workspace_wall_t : public wf::signal_provider_t
         }
     }
 
-    wf::signal_connection_t on_workspace_grid_changed = [=] (auto)
+    wf::signal::connection_t<workspace_grid_changed_signal> on_workspace_grid_changed = [=] (auto)
     {
         resize_colors();
     };

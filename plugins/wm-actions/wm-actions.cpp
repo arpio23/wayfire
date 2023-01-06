@@ -180,7 +180,8 @@ class wayfire_wm_actions_t : public wf::per_output_plugin_instance_t
         check_disable_showdesktop(ev->view);
     };
 
-    wf::signal_connection_t workspace_changed = [this] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::workspace_changed_signal> workspace_changed =
+        [=] (wf::workspace_changed_signal *ev)
     {
         disable_showdesktop();
     };
@@ -280,7 +281,7 @@ class wayfire_wm_actions_t : public wf::per_output_plugin_instance_t
             }
 
             output->connect_signal("view-layer-attached", &view_attached);
-            output->connect_signal("workspace-changed", &workspace_changed);
+            output->connect(&workspace_changed);
             output->connect_signal("view-minimized", &view_minimized);
             output->connect(&on_view_mapped);
             return true;

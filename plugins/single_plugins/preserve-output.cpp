@@ -142,13 +142,13 @@ class wayfire_preserve_output : public wf::per_output_plugin_instance_t
         }
     }
 
-    wf::signal_connection_t output_pre_remove = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::output_pre_remove_signal> output_pre_remove =
+        [=] (wf::output_pre_remove_signal *ev)
     {
-        auto signal_data = (wf::output_pre_remove_signal*)data;
-        LOGD("Received pre-remove event: ", signal_data->output->to_string());
+        LOGD("Received pre-remove event: ", ev->output->to_string());
         outputs_being_removed = true;
 
-        if (signal_data->output != output)
+        if (ev->output != output)
         {
             // This event is not for this output
             return;
@@ -183,10 +183,9 @@ class wayfire_preserve_output : public wf::per_output_plugin_instance_t
         }
     };
 
-    wf::signal_connection_t output_removed = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::output_removed_signal> output_removed = [=] (wf::output_removed_signal *ev)
     {
-        auto signal_data = (wf::output_removed_signal*)data;
-        LOGD("Received output-removed event: ", signal_data->output->to_string());
+        LOGD("Received output-removed event: ", ev->output->to_string());
         outputs_being_removed = false;
     };
 
@@ -316,10 +315,8 @@ class wayfire_preserve_output : public wf::per_output_plugin_instance_t
             restore_views_to_output();
         });
 
-        wf::get_core().output_layout->connect_signal("output-pre-remove",
-            &output_pre_remove);
-        wf::get_core().output_layout->connect_signal("output-removed",
-            &output_removed);
+        wf::get_core().output_layout->connect(&output_pre_remove);
+        wf::get_core().output_layout->connect(&output_removed);
     }
 
     void fini() override

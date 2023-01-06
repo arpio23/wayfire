@@ -34,7 +34,7 @@ class wayfire_place_window : public wf::per_output_plugin_instance_t
         }
     };
 
-    wf::signal_connection_t workarea_changed_cb = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::workarea_changed_signal> workarea_changed_cb = [=] (auto)
     {
         auto workarea = output->workspace->get_workarea();
         if ((cascade_x < workarea.x) ||
@@ -61,7 +61,7 @@ class wayfire_place_window : public wf::per_output_plugin_instance_t
         cascade_x = workarea.x;
         cascade_y = workarea.y;
 
-        output->connect_signal("workarea-changed", &workarea_changed_cb);
+        output->connect(&workarea_changed_cb);
         output->connect(&on_view_mapped);
     }
 

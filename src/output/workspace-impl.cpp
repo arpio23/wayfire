@@ -290,7 +290,7 @@ class output_viewport_manager_t
         wf::workspace_grid_changed_signal data;
         data.old_grid_size = old_size;
         data.new_grid_size = grid;
-        output->emit_signal("workspace-grid-changed", &data);
+        output->emit(&data);
     }
 
   public:
@@ -528,7 +528,7 @@ class output_viewport_manager_t
 
         // Finally, do a refocus to update the keyboard focus
         output->refocus();
-        output->emit_signal("workspace-changed", &data);
+        output->emit(&data);
 
         // Don't forget to update the geometry of the wset, as the geometry of it has changed now.
         wf::scene::update(output->get_wset(), wf::scene::update_flag::GEOMETRY);
@@ -641,7 +641,7 @@ class output_workarea_manager_t
 
         if (data.old_workarea != data.new_workarea)
         {
-            output->emit_signal("workarea-changed", &data);
+            output->emit(&data);
         }
     }
 };
@@ -655,7 +655,8 @@ class workspace_manager::impl
         "workarounds/remove_output_limits"};
 
 
-    signal_connection_t output_geometry_changed = [&] (void*)
+    wf::signal::connection_t<output_configuration_changed_signal> output_geometry_changed =
+        [=] (output_configuration_changed_signal *ev)
     {
         using namespace wf::scene;
 
@@ -732,7 +733,7 @@ class workspace_manager::impl
         output_geometry = output->get_relative_geometry();
 
         o->connect_signal("view-change-workspace", &view_changed_workspace);
-        o->connect_signal("output-configuration-changed", &output_geometry_changed);
+        o->connect(&output_geometry_changed);
         o->connect_signal("view-fullscreen", &on_view_state_updated);
         o->connect(&on_view_unmap);
     }
@@ -772,7 +773,7 @@ class workspace_manager::impl
         data.new_viewport = ws;
         data.output = output;
         data.fixed_views = fixed_views;
-        output->emit_signal("set-workspace-request", &data);
+        output->emit(&data);
 
         if (!data.carried_out)
         {
@@ -794,8 +795,9 @@ class workspace_manager::impl
         promotion_active = true;
         scene::set_node_enabled(output->node_for_layer(scene::layer::TOP), false);
 
-        output->emit_signal("fullscreen-layer-focused",
-            reinterpret_cast<signal_data_t*>(1));
+        wf::fullscreen_layer_focused_signal ev;
+        ev.has_promoted = true;
+        output->emit(&ev);
         LOGD("autohide panels");
     }
 
@@ -809,8 +811,9 @@ class workspace_manager::impl
         promotion_active = false;
         scene::set_node_enabled(output->node_for_layer(scene::layer::TOP), true);
 
-        output->emit_signal("fullscreen-layer-focused",
-            reinterpret_cast<signal_data_t*>(0));
+        wf::fullscreen_layer_focused_signal ev;
+        ev.has_promoted = false;
+        output->emit(&ev);
         LOGD("restore panels");
     }
 

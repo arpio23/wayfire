@@ -566,8 +566,7 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
 
         pre_hook = [=] () { update_model(); };
         view->get_output()->render->add_effect(&pre_hook, wf::OUTPUT_EFFECT_PRE);
-        view->get_output()->connect_signal("workspace-changed",
-            &on_workspace_changed);
+        view->get_output()->connect(&on_workspace_changed);
 
         view->connect(&on_view_unmap);
         view->connect_signal("tiled", &view_state_changed);
@@ -639,9 +638,9 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
         state->handle_wm_geometry(sig->old_geometry);
     };
 
-    wf::signal_connection_t on_workspace_changed = [=] (auto data)
+    wf::signal::connection_t<wf::workspace_changed_signal> on_workspace_changed =
+        [=] (wf::workspace_changed_signal *ev)
     {
-        auto ev = static_cast<wf::workspace_changed_signal*>(data);
         state->handle_workspace_change(ev->old_viewport, ev->new_viewport);
     };
 
@@ -666,7 +665,7 @@ class wobbly_transformer_node_t : public wf::scene::floating_inner_node_t
         view->get_output()->render->add_effect(&pre_hook, wf::OUTPUT_EFFECT_PRE);
 
         on_workspace_changed.disconnect();
-        view->get_output()->connect_signal("workspace-changed", &on_workspace_changed);
+        view->get_output()->connect(&on_workspace_changed);
     };
 
     std::unique_ptr<wf::iwobbly_state_t> state;

@@ -236,7 +236,7 @@ class wayfire_animation : public wf::plugin_interface_t, private wf::per_output_
     {
         output->connect(&on_view_mapped);
         output->connect(&on_view_pre_unmap);
-        output->connect_signal("start-rendering", &on_render_start);
+        output->connect(&on_render_start);
         output->connect_signal("view-minimize-request", &on_minimize_request);
     }
 
@@ -408,9 +408,9 @@ class wayfire_animation : public wf::plugin_interface_t, private wf::per_output_
         }
     };
 
-    wf::signal_connection_t on_render_start = [=] (wf::signal_data_t *data)
+    wf::signal::connection_t<wf::output_start_rendering_signal> on_render_start =
+        [=] (wf::output_start_rendering_signal *ev)
     {
-        auto ev = static_cast<wf::output_start_rendering_signal*>(data);
         new wf_system_fade(ev->output, startup_duration);
     };
 };

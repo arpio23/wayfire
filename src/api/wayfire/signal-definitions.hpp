@@ -162,7 +162,6 @@ struct keyboard_focus_changed_signal
 /** Base class for all output signals. */
 
 /**
- * name: output-added
  * on: output-layout
  * when: Each time a new output is added.
  */
@@ -172,7 +171,6 @@ struct output_added_signal
 };
 
 /**
- * name: pre-remove
  * on: output, output-layout(output-)
  * when: Emitted just before starting the destruction procedure for an output.
  */
@@ -182,7 +180,6 @@ struct output_pre_remove_signal
 };
 
 /**
- * name: output-removed
  * on: output-layout
  * when: Each time a new output is added.
  */
@@ -208,16 +205,22 @@ enum output_config_field_t
 struct output_state_t;
 
 /**
- * name: configuration-changed
- * on: output, output-layout(output-)
- * when: Each time the output's source, mode, scale, transform and/or position
- *   changes.
+ * on: output-layout
+ * when: Each time the configuration of the output layout changes.
  */
-struct output_configuration_changed_signal : public wf::signal_data_t
+struct output_layout_configuration_changed_signal
+{};
+
+/**
+ * on: output
+ * when: Each time the output's source, mode, scale, transform and/or position changes.
+ */
+struct output_configuration_changed_signal
 {
     wf::output_t *output;
     output_configuration_changed_signal(const wf::output_state_t& st) : state(st)
     {}
+
     /**
      * Which output attributes actually changed.
      * A bitwise OR of output_config_field_t.
@@ -231,11 +234,10 @@ struct output_configuration_changed_signal : public wf::signal_data_t
 };
 
 /**
- * name: gain-focus
  * on: output, core(output-)
  * when: Immediately after the output becomes focused.
  */
-struct output_gain_focus_signal : public signal_data_t
+struct output_gain_focus_signal
 {
     wf::output_t *output;
 };
@@ -244,13 +246,12 @@ struct output_gain_focus_signal : public signal_data_t
  * Output rendering signals (see also wayfire/workspace-stream.hpp)
  * -------------------------------------------------------------------------- */
 /**
- * name: start-rendering
  * on: output
  * when: Whenever the output is ready to start rendering. This can happen
  *   either on output creation or whenever all inhibits in wayfire-shell have
  *   been removed.
  */
-struct output_start_rendering_signal : public wf::signal_data_t
+struct output_start_rendering_signal
 {
     wf::output_t *output;
 };
@@ -260,16 +261,11 @@ struct output_start_rendering_signal : public wf::signal_data_t
  * -------------------------------------------------------------------------- */
 
 /**
- * name: workspace-changed
  * on: output
  * when: Whenever the current workspace on the output has changed.
  */
-struct workspace_changed_signal : public wf::signal_data_t
+struct workspace_changed_signal
 {
-    /** For workspace-change-request, whether the request has already been
-     * handled. */
-    bool carried_out;
-
     /** Previously focused workspace */
     wf::point_t old_viewport;
 
@@ -281,14 +277,25 @@ struct workspace_changed_signal : public wf::signal_data_t
 };
 
 /**
- * name: workspace-change-request
  * on: output
  * when: Whenever a workspace change is requested by core or by a plugin.
  *   This can be used by plugins who wish to handle workspace changing
  *   themselves, for ex. if animating the transition.
  */
-struct workspace_change_request_signal : public workspace_changed_signal
+struct workspace_change_request_signal
 {
+    /** Previously focused workspace */
+    wf::point_t old_viewport;
+
+    /** Workspace that is to be focused or became focused */
+    wf::point_t new_viewport;
+
+    /** The output this is happening on */
+    wf::output_t *output;
+
+    /** Whether the request has already been handled. */
+    bool carried_out;
+
     /**
      * A list of views whose geometry should remain stationary.
      * The caller is responsible for ensuring that this doesn't move the views
@@ -301,11 +308,10 @@ struct workspace_change_request_signal : public workspace_changed_signal
 };
 
 /**
- * name: workspace-grid-changed
  * on: output
  * when: Whenever the workspace grid size changes.
  */
-struct workspace_grid_changed_signal : public wf::signal_data_t
+struct workspace_grid_changed_signal
 {
     /** The grid size before the change. */
     wf::dimensions_t old_grid_size;
@@ -315,7 +321,6 @@ struct workspace_grid_changed_signal : public wf::signal_data_t
 };
 
 /**
- * name: workarea-changed
  * on: output
  * when: Whenever the available workarea changes.
  */
@@ -326,12 +331,13 @@ struct workarea_changed_signal : public wf::signal_data_t
 };
 
 /**
- * name: fullscreen-layer-focused
  * on: output
  * when: Whenever a fullscreen view is promoted on top of the other layers.
- * argument: The event data pointer is null if there are no promoted views,
- *   and not-null otherwise.
  */
+struct fullscreen_layer_focused_signal
+{
+    bool has_promoted;
+};
 
 /* ----------------------------------------------------------------------------/
  * View signals

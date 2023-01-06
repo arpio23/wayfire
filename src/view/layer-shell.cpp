@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <wayfire/signal-definitions.hpp>
 #include "xdg-shell.hpp"
 #include "wayfire/core.hpp"
 #include "wayfire/debug.hpp"
@@ -81,7 +82,8 @@ wf::workspace_manager::anchored_edge anchor_to_edge(uint32_t edges)
 struct wf_layer_shell_manager
 {
   private:
-    wf::signal_connection_t on_output_layout_changed = [=] (wf::signal_data_t*)
+    wf::signal::connection_t<wf::output_layout_configuration_changed_signal> on_output_layout_changed =
+        [=] (wf::output_layout_configuration_changed_signal *ev)
     {
         auto outputs = wf::get_core().output_layout->get_outputs();
         for (auto wo : outputs)
@@ -92,8 +94,7 @@ struct wf_layer_shell_manager
 
     wf_layer_shell_manager()
     {
-        wf::get_core().output_layout->connect_signal("configuration-changed",
-            &on_output_layout_changed);
+        wf::get_core().output_layout->connect(&on_output_layout_changed);
     }
 
   public:
