@@ -136,16 +136,16 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         output->add_activator(wf::option_wrapper_t<wf::activatorbinding_t>{"scale/toggle"}, &toggle_cb);
         output->add_activator(
             wf::option_wrapper_t<wf::activatorbinding_t>{"scale/toggle_all"}, &toggle_all_cb);
-        output->connect_signal("scale-update", &update_cb);
+        output->connect(&update_cb);
         grab = std::make_unique<wf::input_grab_t>("scale", output, this, this, nullptr);
 
         allow_scale_zoom.set_callback(allow_scale_zoom_option_changed);
 
         setup_workspace_switching();
 
-        drag_helper->connect_signal("focus-output", &on_drag_output_focus);
-        drag_helper->connect_signal("done", &on_drag_done);
-        drag_helper->connect_signal("snap-off", &on_drag_snap_off);
+        drag_helper->connect(&on_drag_output_focus);
+        drag_helper->connect(&on_drag_done);
+        drag_helper->connect(&on_drag_snap_off);
 
         show_title.init(output);
     }
@@ -210,7 +210,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         /* signal that a transformer was added to this view */
         scale_transformer_added_signal data;
         data.view = view;
-        output->emit_signal("scale-transformer-added", &data);
+        output->emit(&data);
 
         return true;
     }
@@ -221,7 +221,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         /* signal that a transformer was added to this view */
         scale_transformer_removed_signal data;
         data.view = view;
-        output->emit_signal("scale-transformer-removed", &data);
+        output->emit(&data);
         view->get_transformed_node()->rem_transformer("scale");
         set_tiled_wobbly(view, false);
     }
@@ -299,13 +299,12 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         return false;
     };
 
-    wf::signal_connection_t update_cb{[=] (wf::signal_data_t*)
+    wf::signal::connection_t<scale_update_signal> update_cb = [=] (scale_update_signal *ev)
+    {
+        if (active)
         {
-            if (active)
-            {
-                layout_slots(get_views());
-                output->render->schedule_redraw();
-            }
+            layout_slots(get_views());
+            output->render->schedule_redraw();
         }
     };
 
@@ -882,7 +881,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     {
         std::vector<wayfire_view> filtered_views;
         scale_filter_signal signal(views, filtered_views);
-        output->emit_signal("scale-filter", &signal);
+        output->emit(&signal);
 
         /* update hidden views -- ensure that they and their children have a
          * transformer and are in scale_data */
@@ -1268,18 +1267,18 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         return output->is_plugin_active(this->grab_interface.name);
     }
 
-    wf::signal_connection_t on_drag_output_focus = [=] (auto data)
+    wf::signal::connection_t<wf::move_drag::drag_focus_output_signal> on_drag_output_focus =
+        [=] (wf::move_drag::drag_focus_output_signal *ev)
     {
-        auto ev = static_cast<wf::move_drag::drag_focus_output_signal*>(data);
         if ((ev->focus_output == output) && can_handle_drag())
         {
             drag_helper->set_scale(1.0);
         }
     };
 
-    wf::signal_connection_t on_drag_done = [=] (auto data)
+    wf::signal::connection_t<wf::move_drag::drag_done_signal> on_drag_done =
+        [=] (wf::move_drag::drag_done_signal *ev)
     {
-        auto ev = static_cast<wf::move_drag::drag_done_signal*>(data);
         if ((ev->focused_output == output) && can_handle_drag())
         {
             if (ev->main_view->get_output() == ev->focused_output)
@@ -1298,7 +1297,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         }
     };
 
-    wf::signal_connection_t on_drag_snap_off = [=] (auto data)
+    wf::signal::connection_t<wf::move_drag::snap_off_signal> on_drag_snap_off = [=] (auto)
     {
         last_selected_view = nullptr;
     };
@@ -1383,7 +1382,8 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         }
 
         refocus();
-        output->emit_signal("scale-end", nullptr);
+        scale_end_signal signal;
+        output->emit(&signal);
     }
 
     /* Completely end scale, including animation */
@@ -1392,7 +1392,8 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         if (active)
         {
             /* only emit the signal if deactivate() was not called before */
-            output->emit_signal("scale-end", nullptr);
+            scale_end_signal signal;
+            output->emit(&signal);
 
             if (drag_helper->view)
             {
