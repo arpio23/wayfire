@@ -24,26 +24,71 @@
 
 #include <memory>
 #include <wayfire/core.hpp>
+#include <wayfire/bindings-repository.hpp>
 #include <wayfire/view.hpp>
 #include <wayfire/per-output-plugin.hpp>
 #include <wayfire/output.hpp>
+#include "ipc-helpers.hpp"
+#include "wayfire/plugin.hpp"
+#include "wayfire/plugins/common/shared-core-data.hpp"
 #include "wayfire/view-transform.hpp"
 #include "wayfire/workspace-manager.hpp"
+#include "ipc-method-repository.hpp"
 
-class wayfire_alpha : public wf::per_output_plugin_instance_t
+class wayfire_alpha : public wf::plugin_interface_t
 {
     wf::option_wrapper_t<wf::keybinding_t> modifier{"alpha/modifier"};
     wf::option_wrapper_t<double> min_value{"alpha/min_value"};
-    wf::plugin_activation_data_t grab_interface{
-        .name = "alpha",
-        .capabilities = wf::CAPABILITY_MANAGE_DESKTOP,
-    };
+    wf::shared_data::ref_ptr_t<wf::ipc::method_repository_t> ipc_repo;
 
   public:
     void init() override
     {
         min_value.set_callback(min_value_changed);
-        output->add_axis(modifier, &axis_cb);
+        wf::get_core().bindings->add_axis(modifier, &axis_cb);
+        ipc_repo->register_method("wf/alpha/set_view_alpha", ipc_set_view_alpha);
+    }
+
+    void fini() override
+    {
+        for (auto& view : wf::get_core().get_all_views())
+        {
+            view->get_transformed_node()->rem_transformer("alpha");
+        }
+
+        wf::get_core().bindings->rem_binding(&axis_cb);
+        ipc_repo->unregister_method("wf/alpha/set_view_alpha");
+    }
+
+    wf::ipc::method_callback ipc_set_view_alpha = [=] (nlohmann::json data) -> nlohmann::json
+    {
+        WFJSON_EXPECT_FIELD(data, "view-id", number_unsigned);
+        WFJSON_EXPECT_FIELD(data, "alpha", number);
+
+        auto view = wf::ipc::find_view_by_id(data["view-id"]);
+        if (view && view->is_mapped())
+        {
+            auto tr = ensure_transformer(view);
+            tr->alpha = data["alpha"];
+            view->damage();
+        } else
+        {
+            return wf::ipc::json_error("Failed to find view with given id. Maybe it was closed?");
+        }
+
+        return wf::ipc::json_ok();
+    };
+
+    std::shared_ptr<wf::scene::view_2d_transformer_t> ensure_transformer(wayfire_view view)
+    {
+        auto tmgr = view->get_transformed_node();
+        if (!tmgr->get_transformer<wf::scene::node_t>("alpha"))
+        {
+            auto node = std::make_shared<wf::scene::view_2d_transformer_t>(view);
+            tmgr->add_transformer(node, wf::TRANSFORMER_2D, "alpha");
+        }
+
+        return tmgr->get_transformer<wf::scene::view_2d_transformer_t>("alpha");
     }
 
     void update_alpha(wayfire_view view, float delta)
@@ -73,12 +118,16 @@ class wayfire_alpha : public wf::per_output_plugin_instance_t
 
     wf::axis_callback axis_cb = [=] (wlr_pointer_axis_event *ev)
     {
-        if (!output->activate_plugin(&grab_interface))
+        auto output = wf::get_core().get_active_output();
+        if (!output)
         {
             return false;
         }
 
-        output->deactivate_plugin(&grab_interface);
+        if (!output->can_activate_plugin(wf::CAPABILITY_MANAGE_DESKTOP))
+        {
+            return false;
+        }
 
         auto view = wf::get_core().get_cursor_focus_view();
         if (!view)
@@ -105,11 +154,10 @@ class wayfire_alpha : public wf::per_output_plugin_instance_t
 
     wf::config::option_base_t::updated_callback_t min_value_changed = [=] ()
     {
-        for (auto& view : output->workspace->get_views_in_layer(wf::ALL_LAYERS))
+        for (auto& view : wf::get_core().get_all_views())
         {
             auto tmgr = view->get_transformed_node();
-            auto transformer =
-                tmgr->get_transformer<wf::scene::view_2d_transformer_t>("alpha");
+            auto transformer = tmgr->get_transformer<wf::scene::view_2d_transformer_t>("alpha");
             if (transformer && (transformer->alpha < min_value))
             {
                 transformer->alpha = min_value;
@@ -117,19 +165,6 @@ class wayfire_alpha : public wf::per_output_plugin_instance_t
             }
         }
     };
-
-    void fini() override
-    {
-        for (auto& view : wf::get_core().get_all_views())
-        {
-            if (!view->get_output() || (view->get_output() == output))
-            {
-                view->get_transformed_node()->rem_transformer("alpha");
-            }
-        }
-
-        output->rem_binding(&axis_cb);
-    }
 };
 
-DECLARE_WAYFIRE_PLUGIN(wf::per_output_plugin_t<wayfire_alpha>);
+DECLARE_WAYFIRE_PLUGIN(wayfire_alpha);
