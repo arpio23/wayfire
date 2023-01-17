@@ -23,6 +23,13 @@ stipc = shared_module('stipc',
     install: true,
     install_dir: conf_data.get('PLUGIN_PATH'))
 
+ipc_notif = shared_module('wf-ipc-notifications',
+    ['wf-ipc-notifications.cpp'],
+    include_directories: [wayfire_api_inc, wayfire_conf_inc, plugins_common_inc],
+    dependencies: [wlroots, pixman, wfconfig, wftouch, json, evdev],
+    install: true,
+    install_dir: conf_data.get('PLUGIN_PATH'))
+
 demoipc = shared_module('demo-ipc',
     ['demo-ipc.cpp'],
     include_directories: [wayfire_api_inc, wayfire_conf_inc, plugins_common_inc],
