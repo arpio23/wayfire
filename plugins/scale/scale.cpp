@@ -1418,6 +1418,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         scale_data.clear();
         grab->ungrab_input();
         view_focused.disconnect();
+        on_view_mapped.disconnect();
         view_unmapped.disconnect();
         view_attached.disconnect();
         view_detached.disconnect();
