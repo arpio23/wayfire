@@ -1,4 +1,5 @@
 #include "xdg-toplevel-view.hpp"
+#include "view/wlr-surface-node.hpp"
 #include "wayfire/core.hpp"
 #include <bits/ranges_util.h>
 #include <wayfire/txn/transaction.hpp>
@@ -21,6 +22,7 @@ std::unordered_map<wlr_surface*, uint32_t> uses_csd;
 wf::xdg_toplevel_view_t::xdg_toplevel_view_t(wlr_xdg_toplevel *tlvl)
 {
     this->xdg_toplevel = tlvl;
+    this->main_surface = std::make_shared<scene::wlr_surface_node_t>(tlvl->base->surface, false);
 
     on_surface_commit.set_callback([&] (void*) { commit(); });
     on_map.set_callback([&] (void*) { map(); });
@@ -320,7 +322,6 @@ void wf::xdg_toplevel_view_t::map()
     scene::set_node_enabled(priv->root_node, true);
     priv->wsurface = surf;
 
-    this->main_surface = std::make_shared<scene::wlr_surface_node_t>(surf);
     priv->surface_root_node->set_children_list({main_surface});
     scene::update(priv->surface_root_node, scene::update_flag::CHILDREN_LIST);
     surface_controller = std::make_unique<wlr_surface_controller_t>(surf, priv->surface_root_node);
@@ -437,6 +438,10 @@ void wf::xdg_toplevel_view_t::commit()
     {
         this->last_size_request = wf::dimensions(xdg_g);
     }
+
+    scene::surface_state_t cur_state;
+    cur_state.merge_state(xdg_toplevel->base->surface);
+    main_surface->apply_state(std::move(cur_state));
 }
 
 void wf::xdg_toplevel_view_t::destroy()
