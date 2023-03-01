@@ -277,7 +277,6 @@ void wf::compositor_core_impl_t::init()
         &protocols.idle_inhibit->events.new_inhibitor);
 
     protocols.idle = wlr_idle_create(display);
-    protocols.toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
     protocols.pointer_gestures = wlr_pointer_gestures_v1_create(display);
     protocols.relative_pointer = wlr_relative_pointer_manager_v1_create(display);
 

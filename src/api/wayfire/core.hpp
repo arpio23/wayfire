@@ -119,7 +119,6 @@ class compositor_core_t : public wf::object_base_t, public signal::provider_t
         wlr_input_inhibit_manager *input_inhibit;
         wlr_idle *idle;
         wlr_idle_inhibit_manager_v1 *idle_inhibit;
-        wlr_foreign_toplevel_manager_v1 *toplevel_manager;
         wlr_pointer_gestures_v1 *pointer_gestures;
         wlr_relative_pointer_manager_v1 *relative_pointer;
         wlr_pointer_constraints_v1 *pointer_constraints;
