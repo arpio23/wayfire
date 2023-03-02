@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<wayfire>
+	<plugin name="wayfire-shell">
+		<_short>Wayfire Shell Protocol</_short>
+		<_long>An implementation of the wayfire-shell protocol.</_long>
+		<category>Utility</category>
+	</plugin>
+</wayfire>

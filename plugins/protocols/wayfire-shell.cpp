@@ -1,15 +1,19 @@
 /**
  * Implementation of the wayfire-shell-unstable-v2 protocol
  */
+#include <wayland-client.h>
+#include <wayfire/nonstd/wlroots-full.hpp>
+#include <wayfire/util/log.hpp>
+
+#include <memory>
+#include <wayfire/plugin.hpp>
+
 #include "wayfire/output.hpp"
 #include "wayfire/core.hpp"
 #include "wayfire/output-layout.hpp"
 #include "wayfire/render-manager.hpp"
-#include "wayfire-shell.hpp"
 #include "wayfire-shell-unstable-v2-protocol.h"
 #include "wayfire/signal-definitions.hpp"
-#include "../view/view-impl.hpp"
-#include <wayfire/util/log.hpp>
 
 /* ----------------------------- wfs_hotspot -------------------------------- */
 static void handle_hotspot_destroy(wl_resource *resource);
@@ -443,3 +447,23 @@ wayfire_shell *wayfire_shell_create(wl_display *display)
 
     return ws;
 }
+
+class wayfire_shell_protocol_impl : public wf::plugin_interface_t
+{
+  public:
+    void init() override
+    {
+        wf_shell = wayfire_shell_create(wf::get_core().display);
+    }
+
+    void fini() override
+    {
+        wl_global_destroy(wf_shell->shell_manager);
+        delete wf_shell;
+    }
+
+  private:
+    wayfire_shell *wf_shell;
+};
+
+DECLARE_WAYFIRE_PLUGIN(wayfire_shell_protocol_impl);
