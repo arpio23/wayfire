@@ -23,6 +23,7 @@ wf::xdg_toplevel_view_t::xdg_toplevel_view_t(wlr_xdg_toplevel *tlvl)
 {
     this->xdg_toplevel = tlvl;
     this->main_surface = std::make_shared<scene::wlr_surface_node_t>(tlvl->base->surface, false);
+    wtoplevel = std::make_shared<xdg_toplevel_t>(tlvl);
 
     on_surface_commit.set_callback([&] (void*) { commit(); });
     on_map.set_callback([&] (void*) { map(); });
@@ -110,27 +111,16 @@ wf::xdg_toplevel_view_t::xdg_toplevel_view_t(wlr_xdg_toplevel *tlvl)
 
 void wf::xdg_toplevel_view_t::move(int x, int y)
 {
-    this->damage();
-
     view_geometry_changed_signal geometry_changed;
     geometry_changed.view = self();
-    geometry_changed.old_geometry = this->wm_geometry;
+    geometry_changed.old_geometry = get_wm_geometry();
 
-    this->wm_geometry.x = x;
-    this->wm_geometry.y = y;
+    this->damage();
 
-    if (priv->frame)
-    {
-        auto expanded    = priv->frame->expand_wm_geometry(this->wm_geometry);
-        auto deco_offset = wf::origin(wm_geometry) - wf::origin(expanded);
-
-        this->base_geometry.x = this->wm_geometry.x - wm_offset.x + deco_offset.x;
-        this->base_geometry.y = this->wm_geometry.y - wm_offset.y + deco_offset.y;
-    } else
-    {
-        this->base_geometry.x = this->wm_geometry.x - wm_offset.x;
-        this->base_geometry.y = this->wm_geometry.y - wm_offset.y;
-    }
+    this->wtoplevel->pending().geometry.x = x;
+    this->wtoplevel->pending().geometry.y = y;
+    auto tx = wf::txn::transaction_t::create(-1);
+    tx->add_object(this->wtoplevel);
 
     /* Make sure that if we move the view while it is unmapped, its snapshot
      * is still valid coordinates */

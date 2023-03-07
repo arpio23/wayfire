@@ -4,6 +4,8 @@
 #include "../wlr-surface-node.hpp"
 #include "../surface-impl.hpp"
 
+#include "xdg-toplevel.hpp"
+
 namespace wf
 {
 /**
@@ -51,16 +53,8 @@ class xdg_toplevel_view_t : public wf::view_interface_t
     std::shared_ptr<wf::scene::wlr_surface_node_t> main_surface;
     std::unique_ptr<wlr_surface_controller_t> surface_controller;
 
-    wf::geometry_t wm_geometry = {100, 100, 0, 0};
-    wf::geometry_t base_geometry = {100, 100, 0, 0};
-    wf::point_t wm_offset;
-
-    wf::dimensions_t last_size_request = {0, 0};
+    std::shared_ptr<wf::xdg_toplevel_t> wtoplevel;
     wlr_xdg_toplevel *xdg_toplevel;
-    uint32_t last_configure_serial;
-    bool should_resize_client(wf::dimensions_t old, wf::dimensions_t next);
-    void update_size();
-    void adjust_anchored_edge(wf::dimensions_t new_size);
 
     void map();
     void unmap();
