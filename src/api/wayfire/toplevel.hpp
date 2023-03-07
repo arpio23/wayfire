@@ -5,7 +5,6 @@
 
 namespace wf
 {
-
 struct toplevel_state_t
 {
     /**
@@ -64,5 +63,4 @@ class toplevel_t : public wf::txn::transaction_object_t
     toplevel_state_t _pending;
     toplevel_state_t _committed;
 };
-
 }

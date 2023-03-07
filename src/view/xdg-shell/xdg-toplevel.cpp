@@ -9,7 +9,7 @@ static void emit_object_ready(wf::txn::transaction_object_t *obj)
     return;
 }
 
-wf::xdg_toplevel_t::xdg_toplevel_t(wlr_xdg_toplevel* toplevel)
+wf::xdg_toplevel_t::xdg_toplevel_t(wlr_xdg_toplevel *toplevel)
 {
     this->toplevel = toplevel;
 
@@ -42,7 +42,7 @@ void wf::xdg_toplevel_t::commit()
     }
 
     auto margins = frame ? frame->get_margins() : decoration_margins_t{0, 0, 0, 0};
-    const int configure_width = std::max(1, _pending.geometry.width - margins.left - margins.right);
+    const int configure_width  = std::max(1, _pending.geometry.width - margins.left - margins.right);
     const int configure_height = std::max(1, _pending.geometry.height - margins.top - margins.bottom);
     this->target_configure = wlr_xdg_toplevel_set_size(this->toplevel, configure_width, configure_height);
 }
@@ -53,12 +53,12 @@ void wf::xdg_toplevel_t::apply()
     {
         wlr_box wm_box;
         wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
-        _committed.geometry.width = wm_box.width;
+        _committed.geometry.width  = wm_box.width;
         _committed.geometry.height = wm_box.height;
     } else
     {
         // If toplevel does no longer exist, we can't change the size anymore.
-        _committed.geometry.width = _current.geometry.width;
+        _committed.geometry.width  = _current.geometry.width;
         _committed.geometry.height = _current.geometry.height;
     }
 
@@ -77,7 +77,7 @@ void wf::xdg_toplevel_t::handle_surface_commit()
     emit_object_ready(this);
 }
 
-void wf::xdg_toplevel_t::set_decoration(decorator_frame_t_t* frame)
+void wf::xdg_toplevel_t::set_decoration(decorator_frame_t_t *frame)
 {
     this->frame = frame;
 }

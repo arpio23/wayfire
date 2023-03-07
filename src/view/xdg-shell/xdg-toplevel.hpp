@@ -11,10 +11,10 @@ namespace wf
 class xdg_toplevel_t : public toplevel_t
 {
   public:
-    xdg_toplevel_t(wlr_xdg_toplevel* toplevel);
+    xdg_toplevel_t(wlr_xdg_toplevel *toplevel);
     void commit() override;
     void apply() override;
-    void set_decoration(decorator_frame_t_t* frame);
+    void set_decoration(decorator_frame_t_t *frame);
     wf::geometry_t calculate_base_geometry() const;
 
   private:
