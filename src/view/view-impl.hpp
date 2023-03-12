@@ -63,6 +63,8 @@ class view_interface_t::view_priv_impl
     scene::floating_inner_ptr surface_root_node;
     wf::output_t *output;
 
+    std::shared_ptr<toplevel_t> toplevel;
+
   private:
     /** Last geometry the view has had in non-tiled and non-fullscreen state.
      * -1 as width/height means that no such geometry has been stored. */

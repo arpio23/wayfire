@@ -954,3 +954,8 @@ wlr_surface*wf::view_interface_t::get_wlr_surface()
 {
     return priv->wsurface;
 }
+
+const std::shared_ptr<wf::toplevel_t>& wf::view_interface_t::toplevel() const
+{
+    return priv->toplevel;
+}
