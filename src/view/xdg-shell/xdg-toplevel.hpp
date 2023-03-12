@@ -2,7 +2,7 @@
 
 #include "wayfire/geometry.hpp"
 #include "wayfire/util.hpp"
-#include "../wlr-surface-node.hpp"
+#include "wayfire/unstable/wlr-surface-node.hpp"
 #include <memory>
 #include <wayfire/toplevel.hpp>
 #include <wayfire/nonstd/wlroots-full.hpp>

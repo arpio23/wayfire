@@ -1,5 +1,4 @@
 #include "xdg-toplevel-view.hpp"
-#include "view/wlr-surface-node.hpp"
 #include "wayfire/core.hpp"
 #include <bits/ranges_util.h>
 #include <wayfire/txn/transaction.hpp>
