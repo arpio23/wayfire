@@ -7,14 +7,6 @@
 #include "wayfire/geometry.hpp"
 #include "wayfire/txn/transaction-object.hpp"
 
-static void emit_object_ready(wf::txn::transaction_object_t *obj)
-{
-    wf::txn::object_ready_signal data_ready;
-    data_ready.self = obj;
-    obj->emit(&data_ready);
-    return;
-}
-
 wf::xdg_toplevel_t::xdg_toplevel_t(wlr_xdg_toplevel *toplevel,
     std::shared_ptr<wf::scene::wlr_surface_node_t> main_surface)
 {
