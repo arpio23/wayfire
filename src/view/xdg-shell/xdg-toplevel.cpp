@@ -78,12 +78,7 @@ void wf::xdg_toplevel_t::apply()
     xdg_toplevel_applied_state_signal event_applied;
     event_applied.old_state = current();
 
-    if (toplevel)
-    {
-        wlr_box wm_box;
-        wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
-        adjust_geometry_for_gravity(_committed, wf::dimensions(wm_box));
-    } else
+    if (!toplevel)
     {
         // If toplevel does no longer exist, we can't change the size anymore.
         _committed.geometry.width  = _current.geometry.width;
@@ -109,6 +104,10 @@ void wf::xdg_toplevel_t::handle_surface_commit()
             // Desired state not reached => Ignore the state altogether
             return;
         }
+
+        wlr_box wm_box;
+        wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
+        adjust_geometry_for_gravity(_committed, wf::dimensions(wm_box));
 
         emit_ready();
         return;
