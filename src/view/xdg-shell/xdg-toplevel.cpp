@@ -36,12 +36,27 @@ void wf::xdg_toplevel_t::commit()
 {
     this->pending_ready = true;
     _committed = _pending;
-    LOGC(TXNI, this, ": committing toplevel state geometry=", _pending.geometry);
+    LOGC(TXNI, this, ": committing toplevel state mapped=", _pending.mapped,
+        " geometry=", _pending.geometry);
 
     if (wf::dimensions(_pending.geometry) == wf::dimensions(_current.geometry))
     {
         emit_ready();
         return;
+    }
+
+    if (_pending.mapped && !_current.mapped)
+    {
+        // We are trying to map the toplevel => check whether we should wait until it sets the proper
+        // geometry,
+        // or whether we are 'only' mapping without resizing.
+        wlr_box box;
+        wlr_xdg_surface_get_geometry(toplevel->base, &box);
+        if (wf::dimensions(box) == wf::dimensions(_pending.geometry))
+        {
+            emit_ready();
+            return;
+        }
     }
 
     if (!this->toplevel)

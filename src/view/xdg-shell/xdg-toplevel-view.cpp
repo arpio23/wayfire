@@ -33,7 +33,15 @@ wf::xdg_toplevel_view_t::xdg_toplevel_view_t(wlr_xdg_toplevel *tlvl)
     this->priv->toplevel = wtoplevel;
 
     on_surface_commit.set_callback([&] (void*) { commit(); });
-    on_map.set_callback([&] (void*) { map(); });
+    on_map.set_callback([&] (void*)
+    {
+        wlr_box box;
+        wlr_xdg_surface_get_geometry(xdg_toplevel->base, &box);
+        wtoplevel->pending().mapped = true;
+        wtoplevel->pending().geometry.width  = box.width;
+        wtoplevel->pending().geometry.height = box.height;
+        wf::get_core().tx_manager->schedule_object(wtoplevel);
+    });
     on_unmap.set_callback([&] (void*) { unmap(); });
     on_destroy.set_callback([&] (void*) { destroy(); });
     on_new_popup.set_callback([&] (void *data)
@@ -220,7 +228,7 @@ bool wf::xdg_toplevel_view_t::should_be_decorated()
 
 bool wf::xdg_toplevel_view_t::is_mapped() const
 {
-    return priv->wsurface;
+    return wtoplevel->current().mapped && priv->wsurface;
 }
 
 void wf::xdg_toplevel_view_t::initialize()
@@ -283,8 +291,6 @@ void wf::xdg_toplevel_view_t::map()
     emit_view_map();
     /* Might trigger repositioning */
     set_toplevel_parent(this->parent);
-
-    wf::dump_scene();
 }
 
 void wf::xdg_toplevel_view_t::unmap()
@@ -306,6 +312,11 @@ void wf::xdg_toplevel_view_t::unmap()
 
 void wf::xdg_toplevel_view_t::handle_toplevel_state_changed(wf::toplevel_state_t old_state)
 {
+    if (!old_state.mapped && wtoplevel->current().mapped)
+    {
+        map();
+    }
+
     view_damage_raw(self(), last_bounding_box);
 
     view_geometry_changed_signal geometry_changed;

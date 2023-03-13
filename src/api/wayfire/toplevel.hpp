@@ -9,6 +9,13 @@ namespace wf
 struct toplevel_state_t
 {
     /**
+     * Mapped toplevel objects are ready to be presented to the user and can interact with input.
+     * Unmapped toplevels usually are not displayed and do not interact with any plugins until they are mapped
+     * at a later point in time.
+     */
+    bool mapped = false;
+
+    /**
      * The geometry of the toplevel, as seen by the 'window manager'. This includes for example decorations,
      * but excludes shadows or subsurfaces sticking out of the main surface.
      */
