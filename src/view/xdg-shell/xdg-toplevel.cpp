@@ -66,10 +66,12 @@ void wf::xdg_toplevel_t::commit()
         return;
     }
 
-    auto margins = frame ? frame->get_margins() : decoration_margins_t{0, 0, 0, 0};
+    auto margins = get_margins();
     const int configure_width  = std::max(1, _pending.geometry.width - margins.left - margins.right);
     const int configure_height = std::max(1, _pending.geometry.height - margins.top - margins.bottom);
     this->target_configure = wlr_xdg_toplevel_set_size(this->toplevel, configure_width, configure_height);
+    // Send frame done to let the client know it can resize
+    main_surface->send_frame_done();
 }
 
 void adjust_geometry_for_gravity(wf::toplevel_state_t& desired_state, wf::dimensions_t actual_size)
@@ -116,7 +118,9 @@ void wf::xdg_toplevel_t::handle_surface_commit()
         // TODO: handle overflow?
         if (this->toplevel->base->current.configure_serial < this->target_configure)
         {
-            // Desired state not reached => Ignore the state altogether
+            // Desired state not reached => wait for the desired state to be reached. In the meantime, send a
+            // frame done so that the client can redraw faster.
+            main_surface->send_frame_done();
             return;
         }
 
