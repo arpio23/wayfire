@@ -36,6 +36,7 @@ class xdg_toplevel_t : public toplevel_t, public std::enable_shared_from_this<xd
 
     void apply_pending_state();
     decoration_margins_t get_margins();
+    wf::dimensions_t get_current_wlr_toplevel_size();
 
     wf::wl_listener_wrapper on_surface_commit;
     wf::wl_listener_wrapper on_toplevel_destroy;

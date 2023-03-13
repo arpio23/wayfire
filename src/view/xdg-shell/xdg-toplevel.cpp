@@ -45,25 +45,22 @@ void wf::xdg_toplevel_t::commit()
         return;
     }
 
-    if (_pending.mapped && !_current.mapped)
-    {
-        // We are trying to map the toplevel => check whether we should wait until it sets the proper
-        // geometry,
-        // or whether we are 'only' mapping without resizing.
-        wlr_box box;
-        wlr_xdg_surface_get_geometry(toplevel->base, &box);
-        if (wf::dimensions(box) == wf::dimensions(_pending.geometry))
-        {
-            emit_ready();
-            return;
-        }
-    }
-
     if (!this->toplevel)
     {
         // No longer mapped => we can do whatever
         emit_ready();
         return;
+    }
+
+    if (_pending.mapped && !_current.mapped)
+    {
+        // We are trying to map the toplevel => check whether we should wait until it sets the proper
+        // geometry, or whether we are 'only' mapping without resizing.
+        if (get_current_wlr_toplevel_size() == wf::dimensions(_pending.geometry))
+        {
+            emit_ready();
+            return;
+        }
     }
 
     auto margins = get_margins();
@@ -124,10 +121,7 @@ void wf::xdg_toplevel_t::handle_surface_commit()
             return;
         }
 
-        wlr_box wm_box;
-        wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
-        adjust_geometry_for_gravity(_committed, wf::dimensions(wm_box));
-
+        adjust_geometry_for_gravity(_committed, this->get_current_wlr_toplevel_size());
         emit_ready();
         return;
     }
@@ -138,21 +132,15 @@ void wf::xdg_toplevel_t::handle_surface_commit()
         return;
     }
 
-    if (pending_state.size == wf::dimensions(main_surface->get_bounding_box()))
+    auto toplevel_size = get_current_wlr_toplevel_size();
+    if (toplevel_size == wf::dimensions(current().geometry))
     {
         // Size did not change, there are no transactions going on - apply the new texture directly
         apply_pending_state();
         return;
     }
 
-    // Size did change => Start a new transaction to change the size.
-    wlr_box wm_box;
-    wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
-    auto margins = get_margins();
-
-    this->pending().geometry.width  = wm_box.width + margins.left + margins.right;
-    this->pending().geometry.height = wm_box.height + margins.top + margins.bottom;
-
+    adjust_geometry_for_gravity(_pending, toplevel_size);
     LOGC(VIEWS, "Client-initiated resize to geometry ", pending().geometry);
     auto tx = wf::txn::transaction_t::create();
     tx->add_object(shared_from_this());
@@ -204,4 +192,16 @@ void wf::xdg_toplevel_t::emit_ready()
         pending_ready = false;
         emit_object_ready(this);
     }
+}
+
+wf::dimensions_t wf::xdg_toplevel_t::get_current_wlr_toplevel_size()
+{
+    // Size did change => Start a new transaction to change the size.
+    wlr_box wm_box;
+    wlr_xdg_surface_get_geometry(toplevel->base, &wm_box);
+    auto margins = get_margins();
+
+    wm_box.width  += margins.left + margins.right;
+    wm_box.height += margins.top + margins.bottom;
+    return wf::dimensions(wm_box);
 }
