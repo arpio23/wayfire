@@ -1,8 +1,10 @@
 /* Needed for pipe2 */
 #ifndef _GNU_SOURCE
     #define _GNU_SOURCE
+    #include "wayfire/scene.hpp"
 #endif
 
+#include "wayfire/scene-operations.hpp"
 #include "wayfire/txn/transaction-manager.hpp"
 #include "wayfire/bindings-repository.hpp"
 #include "wayfire/util.hpp"
@@ -447,6 +449,7 @@ void wf::compositor_core_impl_t::erase_view(wayfire_view v)
         v->set_output(nullptr);
     }
 
+    wf::scene::remove_child(v->get_root_node());
     auto it = std::find_if(views.begin(), views.end(),
         [&v] (const auto& view) { return view.get() == v.get(); });
 
@@ -561,8 +564,16 @@ void wf::compositor_core_impl_t::move_view_to_output(wayfire_view v,
     }
 
     assert(new_output);
+
+    if (old_output)
+    {
+        old_output->workspace->remove_view(v);
+        wf::scene::remove_child(v->get_root_node());
+    }
+
     v->set_output(new_output);
-    new_output->workspace->add_view(v, wf::LAYER_WORKSPACE);
+    wf::scene::add_front(new_output->get_wset(), v->get_root_node());
+    new_output->workspace->add_view(v);
     new_output->focus_view(v);
 
     if (reconfigure)
@@ -580,7 +591,11 @@ void wf::compositor_core_impl_t::move_view_to_output(wayfire_view v,
         }
     }
 
-    this->emit(&data);
+    wf::view_moved_to_output_signal moved_data;
+    moved_data.view = v;
+    moved_data.old_output = old_output;
+    moved_data.new_output = new_output;
+    this->emit(&moved_data);
 }
 
 const std::shared_ptr<wf::scene::root_node_t>& wf::compositor_core_impl_t::scene()
