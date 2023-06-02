@@ -93,7 +93,9 @@ class compositor_core_t : public wf::object_base_t, public signal::provider_t
      */
     wlr_backend *backend;
     wlr_renderer *renderer;
+#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR > 12
     wlr_allocator *allocator;
+#endif
 
     std::unique_ptr<wf::config_backend_t> config_backend;
     std::unique_ptr<wf::output_layout_t> output_layout;

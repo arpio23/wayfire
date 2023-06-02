@@ -24,7 +24,9 @@ extern "C"
 #define static
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/render/wlr_renderer.h>
+#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR > 12
 #include <wlr/render/allocator.h>
+#endif
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
 #include <wlr/types/wlr_matrix.h>

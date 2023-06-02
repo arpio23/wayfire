@@ -663,6 +663,7 @@ struct output_layout_output_t
         }
 
         wlr_dmabuf_attributes attributes;
+#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR > 12
         if (source_back_buffer == NULL)
         {
             LOGE("Got empty buffer on ", wo->handle->name);
@@ -675,6 +676,14 @@ struct output_layout_output_t
 
             return;
         }
+#else
+        if (!wlr_output_export_dmabuf(wo->handle, &attributes))
+        {
+            LOGE("Failed reading mirrored output contents from ", wo->handle);
+
+            return;
+        }
+#endif
 
         /* We export the output to mirror from to a dmabuf, then create
          * a texture from this and use it to render "our" output */
@@ -1095,14 +1104,14 @@ class output_layout_t::impl
     {
         LOGI("new output: ", output->name,
             " (\"", output->make, " ", output->model, " ", output->serial, "\")");
-
+#if WLR_VERSION_MAJOR == 0 && WLR_VERSION_MINOR > 12
         if (!wlr_output_init_render(output,
             get_core().allocator, get_core().renderer))
         {
             LOGE("failed to init wlr render for output ", output->name);
             return;
         }
-
+#endif
         auto lo = new output_layout_output_t(output);
         outputs[output] = std::unique_ptr<output_layout_output_t>(lo);
         lo->on_destroy.set_callback([output, this] (void*)
