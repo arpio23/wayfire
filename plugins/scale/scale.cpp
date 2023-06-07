@@ -25,6 +25,9 @@
 
 using namespace wf::animation;
 
+wf::pointf_t touch_down_position;
+wf::pointf_t touch_up_position;
+
 class scale_animation_t : public duration_t
 {
   public:
@@ -346,8 +349,9 @@ class wayfire_scale : public wf::plugin_interface_t
             wf::input_event_signal<wlr_event_touch_down>*>(data);
         if (ev->event->touch_id == 0)
         {
+            touch_down_position = wf::get_core().get_touch_position(0);
             process_input(BTN_LEFT, WLR_BUTTON_PRESSED,
-                wf::get_core().get_touch_position(0));
+                touch_down_position);
         }
     };
 
@@ -357,8 +361,16 @@ class wayfire_scale : public wf::plugin_interface_t
             wf::input_event_signal<wlr_event_touch_up>*>(data);
         if (ev->event->touch_id == 0)
         {
-            process_input(BTN_LEFT, WLR_BUTTON_RELEASED,
-                wf::get_core().get_touch_position(0));
+            touch_up_position = wf::get_core().get_touch_position(0);
+
+            if((touch_down_position.y - touch_up_position.y) > 250)
+            {
+                process_input(BTN_MIDDLE, WLR_BUTTON_RELEASED,
+                touch_down_position);
+            } else {
+                process_input(BTN_LEFT, WLR_BUTTON_RELEASED,
+                touch_up_position);
+            }
         }
     };
 
