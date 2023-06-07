@@ -136,19 +136,19 @@ class wayfire_idle_singleton : public wf::singleton_plugin_t<wayfire_idle>
 
     wf::activator_callback toggle = [=] (auto)
     {
-        if (!output->can_activate_plugin(grab_interface))
+        auto config = wf::get_core().output_layout->get_current_configuration();
+
+        for (auto& entry : config)
         {
-            return false;
+            if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_SELF){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_DPMS;
+            } else if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_DPMS){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_SELF;
+            }
         }
 
-        if (get_instance().hotkey_inhibitor.has_value())
-        {
-            get_instance().hotkey_inhibitor.reset();
-        } else
-        {
-            get_instance().hotkey_inhibitor.emplace();
-        }
-
+        wf::get_core().output_layout->apply_configuration(config);
+        
         return true;
     };
 
