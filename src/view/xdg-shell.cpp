@@ -167,7 +167,7 @@ void wayfire_xdg_popup::close()
     {
         if (is_mapped())
         {
-            wlr_xdg_popup_destroy(popup->base);
+            wlr_xdg_popup_destroy(popup);
         }
     });
 }
@@ -250,7 +250,8 @@ void wayfire_xdg_view::initialize()
     on_set_parent.set_callback([&] (void*)
     {
         auto parent = xdg_toplevel->parent ?
-            wf::wf_view_from_void(xdg_toplevel->parent->data)->self() : nullptr;
+            wf::wf_view_from_void(
+            xdg_toplevel->parent->base->data)->self() : nullptr;
         set_toplevel_parent(parent);
     });
     on_ping_timeout.set_callback([&] (void*)
@@ -272,9 +273,9 @@ void wayfire_xdg_view::initialize()
     });
     on_request_fullscreen.set_callback([&] (void *data)
     {
-        auto ev = static_cast<wlr_xdg_toplevel_set_fullscreen_event*>(data);
-        auto wo = wf::get_core().output_layout->find_output(ev->output);
-        fullscreen_request(wo, ev->fullscreen);
+        wlr_xdg_toplevel_requested *req = &xdg_toplevel->requested;
+        auto wo = wf::get_core().output_layout->find_output(req->fullscreen_output);
+        fullscreen_request(wo, req->fullscreen);
     });
 
     on_map.connect(&xdg_toplevel->base->events.map);
@@ -390,14 +391,14 @@ void wayfire_xdg_view::set_activated(bool act)
     }
 
     last_configure_serial =
-        wlr_xdg_toplevel_set_activated(xdg_toplevel->base, act);
+        wlr_xdg_toplevel_set_activated(xdg_toplevel, act);
     wf::wlr_view_t::set_activated(act);
 }
 
 void wayfire_xdg_view::set_tiled(uint32_t edges)
 {
-    wlr_xdg_toplevel_set_tiled(xdg_toplevel->base, edges);
-    last_configure_serial = wlr_xdg_toplevel_set_maximized(xdg_toplevel->base,
+    wlr_xdg_toplevel_set_tiled(xdg_toplevel, edges);
+    last_configure_serial = wlr_xdg_toplevel_set_maximized(xdg_toplevel,
         (edges == wf::TILED_EDGES_ALL));
     wlr_view_t::set_tiled(edges);
 }
@@ -406,7 +407,7 @@ void wayfire_xdg_view::set_fullscreen(bool full)
 {
     wf::wlr_view_t::set_fullscreen(full);
     last_configure_serial =
-        wlr_xdg_toplevel_set_fullscreen(xdg_toplevel->base, full);
+        wlr_xdg_toplevel_set_fullscreen(xdg_toplevel, full);
 }
 
 void wayfire_xdg_view::resize(int w, int h)
@@ -422,21 +423,21 @@ void wayfire_xdg_view::resize(int w, int h)
     {
         this->last_size_request = {w, h};
         last_configure_serial   =
-            wlr_xdg_toplevel_set_size(xdg_toplevel->base, w, h);
+            wlr_xdg_toplevel_set_size(xdg_toplevel, w, h);
     }
 }
 
 void wayfire_xdg_view::request_native_size()
 {
     last_configure_serial =
-        wlr_xdg_toplevel_set_size(xdg_toplevel->base, 0, 0);
+        wlr_xdg_toplevel_set_size(xdg_toplevel, 0, 0);
 }
 
 void wayfire_xdg_view::close()
 {
     if (xdg_toplevel)
     {
-        wlr_xdg_toplevel_send_close(xdg_toplevel->base);
+        wlr_xdg_toplevel_send_close(xdg_toplevel);
         wf::wlr_view_t::close();
     }
 }
