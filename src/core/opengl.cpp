@@ -252,7 +252,7 @@ void render_begin()
 {
     if (!wlr_egl_is_current(wf::get_core_impl().egl))
     {
-        wlr_egl_make_current(wf::get_core_impl().egl);
+        wlr_egl_make_current(wf::get_core_impl().egl, EGL_NO_SURFACE, NULL);
     }
 
     GL_CALL(glEnable(GL_BLEND));
