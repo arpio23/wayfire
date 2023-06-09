@@ -56,7 +56,6 @@ class wayfire_focus : public wf::per_output_plugin_instance_t
 class wayfire_exit : public wf::per_output_plugin_instance_t
 {
     wf::key_callback key;
-    wf::signal_connection_t on_output_removed;
 
   public:
     void init() override;
