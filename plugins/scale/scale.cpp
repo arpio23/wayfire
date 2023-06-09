@@ -342,8 +342,6 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
                 process_input(BTN_LEFT, WLR_BUTTON_RELEASED,
                 touch_up_position);
             }
-            touch_up_position = lift_off_position;
-            process_input(BTN_LEFT, WLR_BUTTON_RELEASED, lift_off_position);
         }
     }
 
@@ -352,7 +350,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     {
         if (finger_id == 0)
         {
-            handle_pointer_motion(position, time);
+//            handle_pointer_motion(position, time);
         }
     }
 
