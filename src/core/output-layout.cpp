@@ -360,6 +360,7 @@ struct output_layout_output_t
     {
         /* DRM doesn't support setting a custom mode, so any supported mode
          * must be found in the mode list */
+/*
         if (wlr_output_is_drm(handle))
         {
             wlr_output_mode *mode;
@@ -373,7 +374,7 @@ struct output_layout_output_t
 
             return false;
         }
-
+*/
         /* X11 and Wayland backends support setting custom modes */
         return true;
     }
@@ -535,6 +536,7 @@ struct output_layout_output_t
     std::unordered_set<std::string> added_custom_modes;
     void add_custom_mode(std::string modeline)
     {
+/*
         if (added_custom_modes.count(modeline))
         {
             return;
@@ -554,6 +556,7 @@ struct output_layout_output_t
         {
             wlr_drm_connector_add_mode(handle, mode);
         }
+*/
     }
 
     void refresh_custom_modes()
