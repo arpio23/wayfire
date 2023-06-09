@@ -102,8 +102,8 @@ void wayfire_xdg_popup::update_position()
     }
 
     wf::pointf_t popup_offset = {
-        1.0 * popup->geometry.x + popup_parent->get_window_offset().x,
-        1.0 * popup->geometry.y + popup_parent->get_window_offset().y,
+        1.0 * popup->current.geometry.x + popup_parent->get_window_offset().x,
+        1.0 * popup->current.geometry.y + popup_parent->get_window_offset().y,
     };
 
     auto parent_geometry = popup_parent->get_output_geometry();
@@ -476,7 +476,7 @@ static wlr_xdg_shell *xdg_handle = nullptr;
 void wf::init_xdg_shell()
 {
     static wf::wl_listener_wrapper on_xdg_created;
-    xdg_handle = wlr_xdg_shell_create(wf::get_core().display);
+    xdg_handle = wlr_xdg_shell_create(wf::get_core().display, 2);
 
     if (xdg_handle)
     {
