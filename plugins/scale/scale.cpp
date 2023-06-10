@@ -749,7 +749,7 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     /* Returns a list of views for all workspaces */
     std::vector<wayfire_view> get_all_workspace_views()
     {
-        return output->wset()->get_views(wf::WSET_EXCLUDE_MINIMIZED | wf::WSET_MAPPED_ONLY);
+        return output->wset()->get_views(wf::WSET_MAPPED_ONLY);
     }
 
     /* Returns a list of views for the current workspace */

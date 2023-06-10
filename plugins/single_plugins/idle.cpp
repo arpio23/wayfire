@@ -134,18 +134,17 @@ class wayfire_idle_plugin : public wf::per_output_plugin_instance_t
 
     wf::activator_callback toggle = [=] (auto)
     {
-        if (!output->can_activate_plugin(&grab_interface))
-        {
-            return false;
-        }
+        auto config = wf::get_core().output_layout->get_current_configuration();
 
-        if (global_idle->hotkey_inhibitor.has_value())
+        for (auto& entry : config)
         {
-            global_idle->hotkey_inhibitor.reset();
-        } else
-        {
-            global_idle->hotkey_inhibitor.emplace();
+            if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_SELF){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_DPMS;
+            } else if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_DPMS){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_SELF;
+            }
         }
+        wf::get_core().output_layout->apply_configuration(config);
 
         return true;
     };
