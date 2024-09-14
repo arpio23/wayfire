@@ -105,6 +105,9 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
     wayfire_toplevel_view current_focus_view;
     // View over which the last input press happened
     wayfire_toplevel_view last_selected_view;
+    wayfire_toplevel_view view_to_close;
+    wf::pointf_t drag_start_position;
+    uint64_t drag_start_time;
     std::map<wayfire_toplevel_view, view_scale_data> scale_data;
     wf::option_wrapper_t<int> spacing{"scale/spacing"};
     wf::option_wrapper_t<int> outer_margin{"scale/outer_margin"};
@@ -458,9 +461,13 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
             {
                 // Mark the view as the target of the next input release operation
                 last_selected_view = view;
+                view_to_close = view;
+                drag_start_position = input_position;
+                drag_start_time = wf::get_current_time();
             } else
             {
                 last_selected_view = nullptr;
+                view_to_close = nullptr;
             }
 
             drag_helper->set_pending_drag(input_position);
@@ -471,6 +478,13 @@ class wayfire_scale : public wf::per_output_plugin_instance_t,
         auto view = scale_find_view_at(input_position, output);
         if (!view || (last_selected_view != view))
         {
+            if(view_to_close && 
+                (drag_start_position.y - input_position.y) > 300.0 && 
+                wf::get_current_time() - drag_start_time < 250){
+                view_to_close->close();
+                view_to_close = nullptr;
+            }
+            view_to_close = nullptr;
             last_selected_view = nullptr;
             // Operation was cancelled, for ex. dragged outside of the view
             return;
