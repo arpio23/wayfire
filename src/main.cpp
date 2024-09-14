@@ -374,31 +374,31 @@ int main(int argc, char *argv[])
     core.display = display;
     core.ev_loop = wl_display_get_event_loop(core.display);
     core.backend = wlr_backend_autocreate(core.display, &core.session);
+    //int drm_fd = wlr_backend_get_drm_fd(core.backend);
+    // if (drm_fd < 0)
+    // {
+    //     char *drm_device = getenv("WLR_RENDER_DRM_DEVICE");
+    //     if (drm_device)
+    //     {
+    //         drm_fd = open(drm_device, O_RDWR | O_CLOEXEC);
+    //     }
 
-    int drm_fd = wlr_backend_get_drm_fd(core.backend);
-    if (drm_fd < 0)
-    {
-        char *drm_device = getenv("WLR_RENDER_DRM_DEVICE");
-        if (drm_device)
-        {
-            drm_fd = open(drm_device, O_RDWR | O_CLOEXEC);
-        }
-
-        if (drm_fd < 0)
-        {
-            LOGE("Failed to get DRM file descriptor,",
-                " try specifying a valid WLR_RENDER_DRM_DEVICE!");
-            wl_display_destroy_clients(core.display);
-            wl_display_destroy(core.display);
-            return EXIT_FAILURE;
-        }
-    }
-
-    core.renderer = wlr_gles2_renderer_create_with_drm_fd(drm_fd);
+    //     if (drm_fd < 0)
+    //     {
+    //         LOGE("Failed to get DRM file descriptor,",
+    //             " try specifying a valid WLR_RENDER_DRM_DEVICE!");
+    //         wl_display_destroy_clients(core.display);
+    //         wl_display_destroy(core.display);
+    //         return EXIT_FAILURE;
+    //     }
+    // }
+    core.renderer = wlr_renderer_autocreate(core.backend);
+    wlr_android_renderer_init_wl_display (core.renderer, core.display);
     assert(core.renderer);
     core.allocator = wlr_allocator_autocreate(core.backend, core.renderer);
     assert(core.allocator);
-    core.egl = wlr_gles2_renderer_get_egl(core.renderer);
+    core.egl = wlr_android_renderer_get_egl(core.renderer);
+    LOGI("Using configuration backend: ", config_backend);
     assert(core.egl);
 
     if (!drop_permissions())
