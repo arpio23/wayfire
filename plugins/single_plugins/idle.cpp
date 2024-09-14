@@ -131,13 +131,47 @@ class wayfire_idle_plugin : public wf::per_output_plugin_instance_t
 
     wf::activator_callback toggle = [=] (auto)
     {
-        if (global_idle->hotkey_inhibitor.has_value())
+        // if (global_idle->hotkey_inhibitor.has_value())
+        // {
+        //     global_idle->hotkey_inhibitor.reset();
+        // } else
+        // {
+        //     global_idle->hotkey_inhibitor.emplace();
+        // }
+
+        auto config = wf::get_core().output_layout->get_current_configuration();
+        for (auto& entry : config)
         {
-            global_idle->hotkey_inhibitor.reset();
-        } else
-        {
-            global_idle->hotkey_inhibitor.emplace();
+            if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_SELF){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_DPMS;
+                wf::get_core().run("killall squeekboard");
+            } else if (entry.second.source == wf::OUTPUT_IMAGE_SOURCE_DPMS){
+                entry.second.source = wf::OUTPUT_IMAGE_SOURCE_SELF;
+                wf::get_core().run("squeekboard");
+            }
         }
+        wf::get_core().output_layout->apply_configuration(config);
+        // if(is_idle = true){
+        //     is_idle = false;
+        //     set_state(wf::OUTPUT_IMAGE_SOURCE_DPMS, wf::OUTPUT_IMAGE_SOURCE_SELF);
+        // } else {
+        //     is_idle = true;
+        //     set_state(wf::OUTPUT_IMAGE_SOURCE_SELF, wf::OUTPUT_IMAGE_SOURCE_DPMS);
+        // }
+        // if (!timeout_dpms.is_connected() && is_idle)
+        // {
+        //     is_idle = false;
+        //     set_state(wf::OUTPUT_IMAGE_SOURCE_DPMS, wf::OUTPUT_IMAGE_SOURCE_SELF);
+
+        //     return;
+        // }
+
+        // timeout_dpms.disconnect();
+        // timeout_dpms.set_timeout(1000 * dpms_timeout, [=] ()
+        // {
+        //     is_idle = true;
+        //     set_state(wf::OUTPUT_IMAGE_SOURCE_SELF, wf::OUTPUT_IMAGE_SOURCE_DPMS);
+        // });
 
         return true;
     };
