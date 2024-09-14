@@ -145,7 +145,7 @@ static void signal_handler(int signal)
 
 static std::optional<std::string> choose_socket(wl_display *display)
 {
-    for (int i = 1; i <= 32; i++)
+    for (int i = 0; i <= 32; i++)
     {
         auto name = "wayland-" + std::to_string(i);
         if (wl_display_add_socket(display, name.c_str()) >= 0)
