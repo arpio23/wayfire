@@ -293,7 +293,7 @@ void wf::touch_interface_t::update_cursor_state()
 }
 
 // Swipe params
-constexpr static int EDGE_SWIPE_THRESHOLD  = 10;
+constexpr static int EDGE_SWIPE_THRESHOLD  = 20;
 constexpr static double MIN_SWIPE_DISTANCE = 30;
 constexpr static double MAX_SWIPE_DISTANCE = 450;
 constexpr static double SWIPE_INCORRECT_DRAG_TOLERANCE = 150;
