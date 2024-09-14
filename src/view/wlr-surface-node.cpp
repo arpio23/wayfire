@@ -298,11 +298,11 @@ class wf::scene::wlr_surface_node_t::wlr_surface_render_instance_t : public rend
                 .damage   = std::move(our_damage),
             });
 
-            if (self->surface)
-            {
-                pixman_region32_subtract(damage.to_pixman(), damage.to_pixman(),
-                    &self->surface->opaque_region);
-            }
+            // if (self->surface)
+            // {
+            //     pixman_region32_subtract(damage.to_pixman(), damage.to_pixman(),
+            //         &self->surface->opaque_region);
+            // }
         }
     }
 
