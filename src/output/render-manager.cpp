@@ -328,7 +328,7 @@ struct swapchain_damage_manager_t
         // creeps into the current frame damage, if we had skipped a frame.
         accumulate_damage(next_frame->buffer_age);
 
-        next_frame->render_pass = wlr_renderer_begin_buffer_pass(output->renderer, next_frame->buffer, NULL);
+        next_frame->render_pass = wlr_renderer_begin_buffer_pass_for_output(output->renderer, next_frame->buffer, NULL, output);
         if (!next_frame->render_pass)
         {
             LOGE("Failed to start a render pass!");
@@ -341,8 +341,10 @@ struct swapchain_damage_manager_t
 
     void swap_buffers(std::unique_ptr<frame_object_t> next_frame, const wf::region_t& swap_damage)
     {
-        frame_damage.clear();
-
+        //clearing damage, renderes only the first frame and just black/white noise after.
+        //frame_damage.clear();
+        wlr_output_handle_damage(output, get_scheduled_damage().to_pixman());
+        
         if (!wlr_render_pass_submit(next_frame->render_pass))
         {
             LOGE("Failed to submit render pass!");
@@ -1102,7 +1104,10 @@ class wf::render_manager::impl
 
     void update_bound_output()
     {
-        int current_fb = wlr_gles2_renderer_get_current_fbo(output->handle->renderer);
+        //Not available with hwc
+        //int current_fb = wlr_gles2_renderer_get_current_fbo(output->handle->renderer);
+        int current_fb;
+        GL_CALL(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb));
         bind_output(current_fb);
 
         postprocessing->set_output_framebuffer(current_fb);
@@ -1137,6 +1142,9 @@ class wf::render_manager::impl
         }
 
         /* Part 2: call the renderer, which sets swap_damage and draws the scenegraph */
+
+        // assert(r->rendering) or assert(!r->rendering) in wlroots/renderer/wlr_renderer.c always fails with hwc backend in wlroots
+        output->handle->renderer->rendering = false;
         wlr_renderer_begin_with_buffer(output->handle->renderer, next_frame->buffer);
         update_bound_output();
         render_output();
@@ -1170,7 +1178,13 @@ class wf::render_manager::impl
         OpenGL::render_end();
 
         /* Part 6: finalize frame: swap buffers, send frame_done, etc */
+
+        // assert(r->rendering) or assert(!r->rendering) in wlroots/renderer/wlr_renderer.c always fails with hwc backend in wlroots
+        output->handle->renderer->rendering = true;
         damage_manager->swap_buffers(std::move(next_frame), swap_damage);
+
+        // assert(r->rendering) or assert(!r->rendering) in wlroots/renderer/wlr_renderer.c always fails with hwc backend in wlroots
+        output->handle->renderer->rendering = false;
         OpenGL::unbind_output(output);
         swap_damage.clear();
         post_paint();
