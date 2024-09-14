@@ -26,6 +26,7 @@ extern "C"
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/swapchain.h>
 #include <wlr/render/allocator.h>
+#include <wlr/render/android.h>
 #include <wlr/render/gles2.h>
 #include <wlr/render/egl.h>
 #include <wlr/types/wlr_matrix.h>
